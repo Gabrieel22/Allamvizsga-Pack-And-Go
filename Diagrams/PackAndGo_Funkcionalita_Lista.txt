@@ -1,0 +1,13 @@
+A PackAndGo egy utazástervező oldal, amely segít repülő járatokat, buszjáratokat találni városok és országok között. Az oldal funkciói a következők:
+
+-Regisztráció/Bejelentkezés
+-Közlekedési lehetőségek keresése, beleértve repülőgépet, vonatot és buszt.
+-Link generálása
+-Különböző közlekedési módok árai összehasonlíthatók.
+-Szálláskeresés.
+-Mobilalkalmazás Androidra.
+-Egyéni útvonalak mentése: a felhasználók elmenthetnék kedvenc útvonalaikat.
+-Integrációk: pl. helyi tömegközlekedési appokkal való összekapcsolás.(?)
+-Felhasználói értékelések.
+-Nyelvválasztási opció: magyar/angol.
+-Valutaváltó: eur/ron/huf.
