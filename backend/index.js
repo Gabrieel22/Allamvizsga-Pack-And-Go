@@ -118,33 +118,55 @@ app.get('/flight-search', async (req, res) => {
   }
 });
 
-// Hotel keresése az Amadeus API-val
+// Hotel ajánlatok keresése (a frontend /hotel-search végpontját használjuk)
 app.get('/hotel-search', async (req, res) => {
-  const { cityCode, checkInDate, checkOutDate } = req.query;
+  const { cityName, checkInDate, checkOutDate } = req.query;
 
-  if (!cityCode || !checkInDate || !checkOutDate) {
-    return res.status(400).json({ error: 'Missing required query parameters' });
+  // Ha nincs bemenet, akkor hiba
+  if (!cityName || !checkInDate || !checkOutDate) {
+    return res.status(400).send({ error: "Missing required query parameters: cityName, checkInDate, or checkOutDate" });
   }
 
+  // Dátumok érvényességének ellenőrzése
+  const today = new Date();
+  const validatedCheckInDate = new Date(checkInDate);
+  const validatedCheckOutDate = new Date(checkOutDate);
+
+  if (validatedCheckInDate < today || validatedCheckOutDate < today) {
+    return res.status(400).send({ error: "Invalid date: dates cannot be in the past" });
+  }
+
+  let hotelids;
+
+  // Hotel ID-k lekérése az adott városban
   try {
-    const response = await amadeus.shopping.hotelOffersSearch.get({
-      cityCode,
-      checkInDate,
-      checkOutDate,
-      adults: '1',
-      roomQuantity: '1',
+    const hotelResponse = await amadeus.referenceData.locations.hotels.byCity.get({
+      cityCode: cityName,
     });
 
-    if (response.result && response.result.data && response.result.data.length > 0) {
-      console.log('Hotel Results:', response.result.data);
-      res.status(200).json(response.result.data);
-    } else {
-      console.log('No hotels found.');
-      res.status(404).json({ error: 'No hotels found' });
-    }
+    hotelids = hotelResponse.result.data
+      .slice(0, 50) // Csak az első 50 hotel ID-t használjuk
+      .map(hotel => hotel.hotelId)
+      .join(','); // Hotel ID-k összefűzése vesszővel elválasztva
   } catch (error) {
-    console.error('Amadeus API Error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Error fetching hotel IDs:", error);
+    return res.status(500).send(error.response ? error.response.data : error.message);
+  }
+
+  // Hotel ajánlatok lekérése a kapott hotel ID-k alapján
+  try {
+    const offersResponse = await amadeus.shopping.hotelOffersSearch.get({
+      hotelIds: hotelids,
+      checkInDate: validatedCheckInDate.toISOString().split('T')[0], // Dátum formázása
+      checkOutDate: validatedCheckOutDate.toISOString().split('T')[0], // Dátum formázása
+      roomQuantity: 1,
+      adults: 1,
+    });
+
+    res.send(offersResponse.result);
+  } catch (error) {
+    console.error("API Error:", error);
+    res.status(500).send(error.response ? error.response.data : error.message);
   }
 });
 

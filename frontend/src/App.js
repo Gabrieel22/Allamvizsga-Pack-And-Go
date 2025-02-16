@@ -94,10 +94,11 @@ const App = () => {
 
     try {
       const response = await axios.get(`http://localhost:3000/hotel-search?${queryParams}`);
-      setHotels(response.data);
+      setHotels(response.data.data || []); // Ha a válasz nem tartalmazza a data tömböt, akkor üres tömböt használunk
       setShowHotels(true);
     } catch (error) {
       console.error('Error fetching hotels:', error);
+      setHotels([]); // Ha hiba történik, akkor üres tömböt használunk
       alert('Failed to fetch hotels. Please try again later.');
     }
   };
@@ -225,15 +226,21 @@ const App = () => {
             {showHotels && (
               <div style={styles.hotelsContainer}>
                 <h2>Hotels in {destinationCode}</h2>
-                {hotels.map((hotel, index) => (
-                  <div key={index} style={styles.hotelCard}>
-                    <h3>{hotel.hotel.name}</h3>
-                    <p>{hotel.hotel.description}</p>
-                    <p>Price: {hotel.offers[0].price.total} {hotel.offers[0].price.currency}</p>
-                    <p>Check-In: {hotel.offers[0].checkInDate}</p>
-                    <p>Check-Out: {hotel.offers[0].checkOutDate}</p>
+                {hotels.length === 0 ? (
+                  <div>No hotels found.</div>
+                ) : (
+                  <div>
+                    {hotels.map((hotel, index) => (
+                      <div key={index} style={styles.hotelCard}>
+                        <h3>{hotel.hotel.name}</h3>
+                        <p>{hotel.hotel.description}</p>
+                        <p>Price: {hotel.offers[0].price.total} {hotel.offers[0].price.currency}</p>
+                        <p>Check-In: {hotel.offers[0].checkInDate}</p>
+                        <p>Check-Out: {hotel.offers[0].checkOutDate}</p>
+                      </div>
+                    ))}
                   </div>
-                ))}
+                )}
               </div>
             )}
           </div>

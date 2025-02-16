@@ -33,11 +33,14 @@ const SearchResults = () => {
     const fetchHotels = async () => {
       try {
         const response = await axios.get("http://localhost:3000/hotel-search", {
-          params: { cityCode: destinationCode, checkInDate: dateOfDeparture, checkOutDate: dateOfReturn || dateOfDeparture },
+          params: { cityName: destinationCode, checkInDate: dateOfDeparture, checkOutDate: dateOfReturn || dateOfDeparture },
         });
-        setHotels(response.data);
+        // Rendezzük a hoteleket ár szerint növekvő sorrendben
+        const sortedHotels = response.data.data.sort((a, b) => parseFloat(a.offers[0].price.total) - parseFloat(b.offers[0].price.total));
+        setHotels(sortedHotels || []);
       } catch (err) {
         console.error('Error fetching hotels:', err);
+        setHotels([]); // Ha hiba történik, akkor üres tömböt használunk
       }
     };
 
@@ -55,7 +58,7 @@ const SearchResults = () => {
     if (!price) return null;
 
     return (
-      <div style={styles.priceDetails}>
+      <div>
         <h4>Price Details:</h4>
         <p>Currency: {price.currency}</p>
         <p>Total: {price.total}</p>
@@ -77,18 +80,14 @@ const SearchResults = () => {
 
   const renderItineraries = (itineraries) => {
     return itineraries.map((itinerary, index) => (
-      <div key={index} style={styles.itinerary}>
+      <div key={index}>
         <h4>Itinerary {index + 1}</h4>
         <p>Duration: {itinerary.duration}</p>
         {itinerary.segments.map((segment, segmentIndex) => (
-          <div key={segmentIndex} style={styles.segment}>
+          <div key={segmentIndex}>
             <p>Segment {segmentIndex + 1}:</p>
-            <p>
-              From: {segment.departure.iataCode} at {segment.departure.at}
-            </p>
-            <p>
-              To: {segment.arrival.iataCode} at {segment.arrival.at}
-            </p>
+            <p>From: {segment.departure.iataCode} at {segment.departure.at}</p>
+            <p>To: {segment.arrival.iataCode} at {segment.arrival.at}</p>
             <p>Carrier: {segment.carrierCode}</p>
             <p>Flight Number: {segment.number}</p>
             <p>Duration: {segment.duration}</p>
@@ -99,11 +98,11 @@ const SearchResults = () => {
   };
 
   return (
-    <div style={styles.container}>
-      <h1 style={styles.header}>Flight Search Results</h1>
-      <div style={styles.flightsContainer}>
+    <div>
+      <h1>Flight Search Results</h1>
+      <div>
         {flights.map((flight, index) => (
-          <div key={index} style={styles.flightCard}>
+          <div key={index}>
             <h2>Flight {index + 1}</h2>
             <p>Flight ID: {flight.id}</p>
             <p>Last Ticketing Date: {flight.lastTicketingDate}</p>
@@ -115,75 +114,24 @@ const SearchResults = () => {
         ))}
       </div>
 
-      <div style={styles.hotelsContainer}>
-        <h2>Hotels in {destinationCode}</h2>
-        {hotels.map((hotel, index) => (
-          <div key={index} style={styles.hotelCard}>
-            <h3>{hotel.hotel.name}</h3>
-            <p>{hotel.hotel.description}</p>
-            <p>Price: {hotel.offers[0].price.total} {hotel.offers[0].price.currency}</p>
-            <p>Check-In: {hotel.offers[0].checkInDate}</p>
-            <p>Check-Out: {hotel.offers[0].checkOutDate}</p>
-          </div>
-        ))}
-      </div>
+      <h2>Hotels in {destinationCode}</h2>
+      {!hotels || hotels.length === 0 ? (
+        <div>No hotels found.</div>
+      ) : (
+        <div>
+          {hotels.map((hotel, index) => (
+            <div key={index}>
+              <h3>{hotel.hotel.name}</h3>
+              <p>{hotel.hotel.description}</p>
+              <p>Price: {hotel.offers[0].price.total} {hotel.offers[0].price.currency}</p>
+              <p>Check-In: {hotel.offers[0].checkInDate}</p>
+              <p>Check-Out: {hotel.offers[0].checkOutDate}</p>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
-};
-
-const styles = {
-  container: {
-    fontFamily: 'Arial, sans-serif',
-    padding: '20px',
-    backgroundColor: '#f9f9f9',
-  },
-  header: {
-    textAlign: 'center',
-    fontSize: '24px',
-    marginBottom: '20px',
-  },
-  flightsContainer: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '20px',
-  },
-  flightCard: {
-    backgroundColor: '#fff',
-    padding: '20px',
-    borderRadius: '8px',
-    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-  },
-  itinerary: {
-    marginTop: '10px',
-    padding: '10px',
-    border: '1px solid #ddd',
-    borderRadius: '4px',
-  },
-  segment: {
-    marginTop: '10px',
-    padding: '10px',
-    backgroundColor: '#f5f5f5',
-    borderRadius: '4px',
-  },
-  priceDetails: {
-    marginTop: '10px',
-    padding: '10px',
-    border: '1px solid #ddd',
-    borderRadius: '4px',
-  },
-  hotelsContainer: {
-    marginTop: '20px',
-    padding: '20px',
-    backgroundColor: '#f0f0f0',
-    borderRadius: '8px',
-  },
-  hotelCard: {
-    backgroundColor: '#fff',
-    padding: '20px',
-    borderRadius: '8px',
-    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-    marginBottom: '10px',
-  },
 };
 
 export default SearchResults;
