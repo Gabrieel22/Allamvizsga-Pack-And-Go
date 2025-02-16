@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Routes, Route, useNavigate } from 'react-router-dom';  // Remove BrowserRouter
+import { Routes, Route, useNavigate } from 'react-router-dom';
 import { useLocation } from 'react-router-dom';
 import SearchResults from './SearchResults';
 
@@ -10,13 +10,17 @@ const App = () => {
   const [returnDate, setReturnDate] = useState('');
   const [adults, setAdults] = useState(1);
   const [children, setChildren] = useState(0);
-  const [origin, setOrigin] = useState('');
-  const [destination, setDestination] = useState('');
+  const [originName, setOriginName] = useState('');
+  const [destinationName, setDestinationName] = useState('');
+  const [originCode, setOriginCode] = useState('');
+  const [destinationCode, setDestinationCode] = useState('');
   const [suggestedOrigins, setSuggestedOrigins] = useState([]);
   const [suggestedDestinations, setSuggestedDestinations] = useState([]);
   const [isReturn, setIsReturn] = useState(true);
+  const [hotels, setHotels] = useState([]);
+  const [showHotels, setShowHotels] = useState(false);
 
-  const navigate = useNavigate(); // React Router navigáció
+  const navigate = useNavigate();
 
   useEffect(() => {
     const storedLoginStatus = localStorage.getItem('isLoggedIn');
@@ -53,26 +57,49 @@ const App = () => {
     }
   };
 
-  const handleSuggestionClick = (suggestion, setInputValue) => {
-    setInputValue(suggestion.name);
+  const handleSuggestionClick = (suggestion, setInputName, setInputCode) => {
+    setInputName(suggestion.name);
+    setInputCode(suggestion.iataCode);
     setSuggestedOrigins([]);
     setSuggestedDestinations([]);
   };
 
   const searchFlights = () => {
-    if (!origin || !destination) {
+    if (!originCode || !destinationCode) {
       alert('Please select both origin and destination');
       return;
     }
 
     const queryParams = new URLSearchParams({
-      originCode: origin,
-      destinationCode: destination,
+      originCode: originCode,
+      destinationCode: destinationCode,
       dateOfDeparture: departureDate,
       ...(returnDate && { dateOfReturn: returnDate }),
     }).toString();
 
     navigate(`/flight-search?${queryParams}`);
+  };
+
+  const searchHotels = async () => {
+    if (!destinationCode) {
+      alert('Please select a destination for hotel search');
+      return;
+    }
+
+    const queryParams = new URLSearchParams({
+      cityCode: destinationCode,
+      checkInDate: departureDate,
+      checkOutDate: returnDate || departureDate,
+    }).toString();
+
+    try {
+      const response = await axios.get(`http://localhost:3000/hotel-search?${queryParams}`);
+      setHotels(response.data);
+      setShowHotels(true);
+    } catch (error) {
+      console.error('Error fetching hotels:', error);
+      alert('Failed to fetch hotels. Please try again later.');
+    }
   };
 
   return (
@@ -106,9 +133,9 @@ const App = () => {
                   type="text"
                   style={styles.input}
                   placeholder="Origin"
-                  value={origin}
+                  value={originName}
                   onChange={(e) => {
-                    setOrigin(e.target.value);
+                    setOriginName(e.target.value);
                     fetchSuggestions(e.target.value, setSuggestedOrigins);
                   }}
                 />
@@ -118,9 +145,11 @@ const App = () => {
                       <li
                         key={suggestion.iataCode || index}
                         style={styles.suggestionItem}
-                        onClick={() => handleSuggestionClick(suggestion, setOrigin)}
+                        onClick={() =>
+                          handleSuggestionClick(suggestion, setOriginName, setOriginCode)
+                        }
                       >
-                        {suggestion.name}
+                        {suggestion.name} ({suggestion.iataCode})
                       </li>
                     ))}
                   </ul>
@@ -132,9 +161,9 @@ const App = () => {
                   type="text"
                   style={styles.input}
                   placeholder="Destination"
-                  value={destination}
+                  value={destinationName}
                   onChange={(e) => {
-                    setDestination(e.target.value);
+                    setDestinationName(e.target.value);
                     fetchSuggestions(e.target.value, setSuggestedDestinations);
                   }}
                 />
@@ -144,9 +173,11 @@ const App = () => {
                       <li
                         key={suggestion.iataCode || index}
                         style={styles.suggestionItem}
-                        onClick={() => handleSuggestionClick(suggestion, setDestination)}
+                        onClick={() =>
+                          handleSuggestionClick(suggestion, setDestinationName, setDestinationCode)
+                        }
                       >
-                        {suggestion.name}
+                        {suggestion.name} ({suggestion.iataCode})
                       </li>
                     ))}
                   </ul>
@@ -186,7 +217,25 @@ const App = () => {
               <button style={styles.searchButton} onClick={searchFlights}>
                 Search Flights
               </button>
+              <button style={styles.searchButton} onClick={searchHotels}>
+                Search Hotels
+              </button>
             </main>
+
+            {showHotels && (
+              <div style={styles.hotelsContainer}>
+                <h2>Hotels in {destinationCode}</h2>
+                {hotels.map((hotel, index) => (
+                  <div key={index} style={styles.hotelCard}>
+                    <h3>{hotel.hotel.name}</h3>
+                    <p>{hotel.hotel.description}</p>
+                    <p>Price: {hotel.offers[0].price.total} {hotel.offers[0].price.currency}</p>
+                    <p>Check-In: {hotel.offers[0].checkInDate}</p>
+                    <p>Check-Out: {hotel.offers[0].checkOutDate}</p>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         }
       />
@@ -204,9 +253,11 @@ const styles = {
   subtitle: { textAlign: 'center', fontSize: '16px', marginBottom: '20px' },
   input: { display: 'block', width: '100%', padding: '10px', margin: '10px 0', borderRadius: '5px' },
   passengerCounter: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '10px 0' },
-  searchButton: { width: '100%', padding: '15px', backgroundColor: 'blue', color: 'white', borderRadius: '5px' },
+  searchButton: { width: '100%', padding: '15px', backgroundColor: 'blue', color: 'white', borderRadius: '5px', margin: '10px 0' },
   suggestionList: { listStyleType: 'none', padding: 0, margin: 0, backgroundColor: '#fff', borderRadius: '5px', maxHeight: '200px', overflowY: 'auto', border: '1px solid #ccc' },
   suggestionItem: { padding: '8px', cursor: 'pointer' },
+  hotelsContainer: { marginTop: '20px', padding: '20px', backgroundColor: '#f0f0f0', borderRadius: '8px' },
+  hotelCard: { backgroundColor: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)', marginBottom: '10px' },
 };
 
 export default App;

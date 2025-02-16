@@ -144,7 +144,7 @@ Future<Map<String, dynamic>> fetchAirportData(String query) async {
 Future<List<dynamic>> fetchHotelsByCity(String iataCode) async {
   final String amadeusApiUrl =
       'https://test.api.amadeus.com/v1/reference-data/locations/hotels/by-city?cityCode=$iataCode';
-  final String amadeusApiKey = 'xCAB6cPad4wmwDqPuu3qOXF3AoXd'; // Cseréld ki a saját kulcsodra
+  final String amadeusApiKey = 'Qp7J3CVC9iA7Ew6HoL0cNtjQYfNt'; // Cseréld ki a saját kulcsodra
 
   try {
     final response = await http.get(

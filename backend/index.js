@@ -118,6 +118,35 @@ app.get('/flight-search', async (req, res) => {
   }
 });
 
+// Hotel keresése az Amadeus API-val
+app.get('/hotel-search', async (req, res) => {
+  const { cityCode, checkInDate, checkOutDate } = req.query;
+
+  if (!cityCode || !checkInDate || !checkOutDate) {
+    return res.status(400).json({ error: 'Missing required query parameters' });
+  }
+
+  try {
+    const response = await amadeus.shopping.hotelOffersSearch.get({
+      cityCode,
+      checkInDate,
+      checkOutDate,
+      adults: '1',
+      roomQuantity: '1',
+    });
+
+    if (response.result && response.result.data && response.result.data.length > 0) {
+      console.log('Hotel Results:', response.result.data);
+      res.status(200).json(response.result.data);
+    } else {
+      console.log('No hotels found.');
+      res.status(404).json({ error: 'No hotels found' });
+    }
+  } catch (error) {
+    console.error('Amadeus API Error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
 
 // Regisztráció
 app.post('/register', async (req, res) => {

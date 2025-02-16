@@ -51,7 +51,7 @@ class _FlightResultsPageState extends State<FlightResultsPage> {
   Future<void> fetchHotelsByCity(String iataCode) async {
     final String amadeusApiUrl =
         'https://test.api.amadeus.com/v1/reference-data/locations/hotels/by-city?cityCode=$iataCode';
-    final String amadeusApiKey = 'xCAB6cPad4wmwDqPuu3qOXF3AoXd';
+    final String amadeusApiKey = 'Qp7J3CVC9iA7Ew6HoL0cNtjQYfNt';
 
     try {
       final response = await http.get(
@@ -75,7 +75,7 @@ class _FlightResultsPageState extends State<FlightResultsPage> {
 Future<void> fetchActivitiesByLocation(double latitude, double longitude) async {
   final String amadeusApiUrl =
       'https://test.api.amadeus.com/v1/shopping/activities?latitude=$latitude&longitude=$longitude';
-  final String accessToken = 'xCAB6cPad4wmwDqPuu3qOXF3AoXd'; // Your access token
+  final String accessToken = 'Qp7J3CVC9iA7Ew6HoL0cNtjQYfNt'; // Your access token
 
   try {
     final response = await http.get(
