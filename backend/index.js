@@ -6,6 +6,9 @@ import dotenv from 'dotenv';
 import axios from 'axios';
 import bcrypt from 'bcrypt';
 import mysql from 'mysql2/promise';
+import nodemailer from 'nodemailer';
+
+
 
 dotenv.config();
 
@@ -15,6 +18,14 @@ const db = mysql.createPool({
   user: "packandgo_user",
   password: "secure_password",
   database: "PackAndGO",
+});
+
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: "galkristof44@gmail.com",//process.env.EMAIL_USER, // Gmail email cím
+    pass: "onpb qgyo tdrn uhfz"//process.env.EMAIL_PASS, // Gmail jelszó vagy app-specifikus jelszó
+  },
 });
 
 // Inicializálás
@@ -222,6 +233,48 @@ app.post('/login', async (req, res) => {
   } catch (error) {
     console.error('Hiba a bejelentkezés során:', error);
     return res.status(500).json({ message: 'Hiba történt a bejelentkezés során!' });
+  }
+});
+
+
+// Foglalás végpont
+app.post('/book', async (req, res) => {
+  const { flight, hotel, name, email, phone } = req.body;
+
+  // Email tartalma
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to: email,
+    subject: 'Foglalás megerősítése',
+    text: `
+      Köszönjük a foglalását!
+
+      Repülőjárat részletei:
+      - Repülőjárat ID: ${flight.id}
+      - Indulás: ${flight.itineraries[0].segments[0].departure.at}
+      - Érkezés: ${flight.itineraries[0].segments[flight.itineraries[0].segments.length - 1].arrival.at}
+      - Ár: ${flight.price.total} ${flight.price.currency}
+
+      Szállás részletei:
+      - Szállás neve: ${hotel.hotel.name}
+      - Ár: ${hotel.offers[0].price.total} ${hotel.offers[0].price.currency}
+      - Check-In: ${hotel.offers[0].checkInDate}
+      - Check-Out: ${hotel.offers[0].checkOutDate}
+
+      Elérhetőségek:
+      - Név: ${name}
+      - Email: ${email}
+      - Telefonszám: ${phone}
+    `,
+  };
+
+  try {
+    // Email küldése
+    await transporter.sendMail(mailOptions);
+    res.status(200).send({ message: "Foglalás sikeres, email elküldve!" });
+  } catch (error) {
+    console.error("Error sending email:", error);
+    res.status(500).send({ error: "Hiba történt az email küldése során." });
   }
 });
 

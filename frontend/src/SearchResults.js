@@ -8,6 +8,12 @@ const SearchResults = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedFlight, setSelectedFlight] = useState(null); // Kiválasztott repülőjárat
+  const [selectedHotel, setSelectedHotel] = useState(null); // Kiválasztott hotel
+  const [showBookingPopup, setShowBookingPopup] = useState(false); // Foglalás popup megjelenítése
+  const [showFlightDetailsPopup, setShowFlightDetailsPopup] = useState(false); // Részletes információk popup megjelenítése
+  const [name, setName] = useState(""); // Név
+  const [email, setEmail] = useState(""); // Email
+  const [phone, setPhone] = useState(""); // Telefonszám
 
   const urlParams = new URLSearchParams(window.location.search);
   const originCode = urlParams.get("originCode");
@@ -74,15 +80,55 @@ const SearchResults = () => {
     return null;
   };
 
-  // Popup bezárása
-  const closePopup = () => {
-    setSelectedFlight(null);
+  // Repülőjárat kiválasztása
+  const handleSelectFlight = (flight) => {
+    setSelectedFlight(flight);
   };
 
-  // Hotel kártyára kattintás eseménykezelő
-  const handleHotelClick = (hotelName) => {
-    const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(hotelName)}`;
-    window.open(googleSearchUrl, '_blank'); // Új lapon nyitja meg a Google keresést
+  // Hotel kiválasztása
+  const handleSelectHotel = (hotel) => {
+    setSelectedHotel(hotel);
+  };
+
+  // Foglalás gombra kattintás eseménykezelő
+  const handleBookingClick = () => {
+    setShowBookingPopup(true);
+  };
+
+  // Foglalás adatok elküldése
+  const handleBookingSubmit = async () => {
+    if (!name || !email || !phone) {
+      alert("Kérjük, töltsd ki az összes mezőt!");
+      return;
+    }
+
+    const bookingDetails = {
+      flight: selectedFlight,
+      hotel: selectedHotel,
+      name,
+      email,
+      phone,
+    };
+
+    try {
+      // Küldjük a foglalás adatait a backendnek
+      const response = await axios.post("http://localhost:3000/book", bookingDetails);
+      if (response.status === 200) {
+        alert("Foglalás sikeres! Hamarosan emailt kapsz a részletekkel.");
+        setShowBookingPopup(false);
+        setSelectedFlight(null);
+        setSelectedHotel(null);
+      }
+    } catch (error) {
+      console.error("Error submitting booking:", error);
+      alert("Hiba történt a foglalás során. Kérjük, próbáld újra később.");
+    }
+  };
+
+  // Részletes információk megjelenítése
+  const handleShowFlightDetails = (flight) => {
+    setSelectedFlight(flight);
+    setShowFlightDetailsPopup(true);
   };
 
   return (
@@ -97,8 +143,7 @@ const SearchResults = () => {
             return (
               <div
                 key={index}
-                className="flight-card"
-                onClick={() => setSelectedFlight(flight)} // Kattintásra kiválasztjuk a repülőjáratot
+                className={`flight-card ${selectedFlight?.id === flight.id ? "selected" : ""}`}
               >
                 <h2>Flight {index + 1}</h2>
                 <p>Departure: {new Date(departureTime).toLocaleString()}</p>
@@ -110,6 +155,8 @@ const SearchResults = () => {
                   </>
                 )}
                 <p>Price: {flight.price.total} {flight.price.currency}</p>
+                <button onClick={() => handleSelectFlight(flight)}>Kiválaszt</button>
+                <button onClick={() => handleShowFlightDetails(flight)}>Részletek</button>
               </div>
             );
           })}
@@ -125,8 +172,8 @@ const SearchResults = () => {
             {hotels.map((hotel, index) => (
               <div
                 key={index}
-                className="hotel-card"
-                onClick={() => handleHotelClick(hotel.hotel.name)} // Kattintásra Google keresés a hotel nevére
+                className={`hotel-card ${selectedHotel?.hotel.hotelId === hotel.hotel.hotelId ? "selected" : ""}`}
+                onClick={() => handleSelectHotel(hotel)} // Kattintásra kiválasztjuk a hotelt
               >
                 <h3>{hotel.hotel.name}</h3>
                 <p>{hotel.hotel.description}</p>
@@ -139,8 +186,61 @@ const SearchResults = () => {
         )}
       </div>
 
-      {/* Popup a részletes információkhoz */}
-      {selectedFlight && (
+      {/* Foglalás gomb */}
+      {selectedFlight && selectedHotel && (
+        <div className="booking-button-container">
+          <button className="booking-button" onClick={handleBookingClick}>
+            Foglalás
+          </button>
+        </div>
+      )}
+
+      {/* Foglalás popup */}
+      {showBookingPopup && (
+        <div className="popup">
+          <div className="popup-content">
+            <h2>Foglalás</h2>
+            <form onSubmit={(e) => e.preventDefault()}>
+              <label>
+                Név:
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                />
+              </label>
+              <label>
+                Email:
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </label>
+              <label>
+                Telefonszám:
+                <input
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  required
+                />
+              </label>
+              <button type="button" onClick={handleBookingSubmit}>
+                Foglalás elküldése
+              </button>
+              <button type="button" onClick={() => setShowBookingPopup(false)}>
+                Mégse
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Részletes információk popup */}
+      {showFlightDetailsPopup && selectedFlight && (
         <div className="popup">
           <div className="popup-content">
             <h2>Flight Details</h2>
@@ -180,7 +280,7 @@ const SearchResults = () => {
               </p>
             ))}
             <p>Grand Total: {selectedFlight.price.grandTotal}</p>
-            <button onClick={closePopup}>Close</button>
+            <button onClick={() => setShowFlightDetailsPopup(false)}>Bezár</button>
           </div>
         </div>
       )}
