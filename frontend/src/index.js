@@ -1,11 +1,11 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { BrowserRouter } from 'react-router-dom'; // Ide jön a Router
-import App from './App'; // Az alkalmazás fő komponens
+import { BrowserRouter } from 'react-router-dom';
+import App from './App';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <BrowserRouter>
-    <App /> {/* A teljes alkalmazást itt rendeled el */}
+    <App />
   </BrowserRouter>
 );

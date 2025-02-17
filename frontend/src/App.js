@@ -218,9 +218,6 @@ const App = () => {
               <button style={styles.searchButton} onClick={searchFlights}>
                 Search Flights
               </button>
-              <button style={styles.searchButton} onClick={searchHotels}>
-                Search Hotels
-              </button>
             </main>
 
             {showHotels && (
