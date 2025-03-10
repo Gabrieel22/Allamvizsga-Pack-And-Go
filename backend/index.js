@@ -237,11 +237,9 @@ app.post('/login', async (req, res) => {
 });
 
 
-// Foglalás végpont
 app.post('/book', async (req, res) => {
   const { flight, hotel, name, email, phone } = req.body;
 
-  // Email tartalma
   const mailOptions = {
     from: process.env.EMAIL_USER,
     to: email,
@@ -269,7 +267,6 @@ app.post('/book', async (req, res) => {
   };
 
   try {
-    // Email küldése
     await transporter.sendMail(mailOptions);
     res.status(200).send({ message: "Foglalás sikeres, email elküldve!" });
   } catch (error) {
@@ -278,7 +275,6 @@ app.post('/book', async (req, res) => {
   }
 });
 
-// Indítás
 app.listen(PORT, () => {
   console.log(`Server is running on port: http://localhost:${PORT}`);
 });
