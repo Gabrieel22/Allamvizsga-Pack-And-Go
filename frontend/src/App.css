@@ -1,0 +1,253 @@
+/* App.css */
+.App {
+  text-align: center;
+}
+
+.App-logo {
+  height: 40vmin;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+.App-header {
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+
+.App-link {
+  color: #61dafb;
+}
+
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.search-results-container {
+  display: flex;
+  justify-content: space-between;
+  padding: 20px;
+}
+
+.flights-column {
+  flex: 1;
+  margin-right: 20px;
+}
+
+.hotels-column {
+  flex: 1;
+  margin-left: 20px;
+}
+
+.flight-card, .hotel-card {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+  background-color: #f9f9f9;
+  cursor: pointer;
+}
+
+.flight-card.selected, .hotel-card.selected {
+  border: 2px solid #007bff; /* Kiválasztott kártya kiemelése */
+}
+
+.flight-card:hover, .hotel-card:hover {
+  background-color: #f0f0f0;
+}
+
+.flight-card h2, .hotel-card h3 {
+  margin-top: 0;
+}
+
+.flight-card p, .hotel-card p {
+  margin: 8px 0;
+}
+
+.booking-button-container {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.booking-button {
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.booking-button:hover {
+  background-color: #0056b3;
+}
+
+.popup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.popup-content {
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  max-width: 600px;
+  width: 100%;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.popup-content h2 {
+  margin-top: 0;
+}
+
+.popup-content form {
+  display: flex;
+  flex-direction: column;
+}
+
+.popup-content label {
+  margin-bottom: 10px;
+}
+
+.popup-content input {
+  padding: 8px;
+  margin-top: 5px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.popup-content button {
+  margin-top: 10px;
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.popup-content button:hover {
+  background-color: #0056b3;
+}
+
+/* Új gombok stílusa a repülőjárat kártyákon */
+.flight-card button {
+  margin: 5px;
+  padding: 5px 10px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.flight-card button:hover {
+  background-color: #0056b3;
+}
+
+/* További stílusok a részletes információk popup-hoz */
+.popup-content h3 {
+  margin-top: 10px;
+}
+
+.popup-content p {
+  margin: 5px 0;
+}
+
+.popup-content .itinerary {
+  margin-bottom: 20px;
+}
+
+.popup-content .segment {
+  margin-left: 20px;
+}
+
+.popup-content .price-details {
+  margin-top: 20px;
+}
+
+.popup-content .price-details p {
+  margin: 5px 0;
+}
+
+.popup-content .price-details .fee {
+  margin-left: 20px;
+}
+
+.popup-content .price-details .service {
+  margin-left: 20px;
+}
+
+.popup-content .price-details .grand-total {
+  font-weight: bold;
+  margin-top: 10px;
+}
+
+/* Stílus a foglalás popup-hoz */
+.popup-content .booking-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.popup-content .booking-form label {
+  margin-bottom: 10px;
+}
+
+.popup-content .booking-form input {
+  padding: 8px;
+  margin-top: 5px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.popup-content .booking-form button {
+  margin-top: 10px;
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.popup-content .booking-form button:hover {
+  background-color: #0056b3;
+}
+
+/* Stílus a részletes információk popup bezáró gombjához */
+.popup-content .close-button {
+  margin-top: 10px;
+  padding: 10px 20px;
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.popup-content .close-button:hover {
+  background-color: #c82333;
+}
