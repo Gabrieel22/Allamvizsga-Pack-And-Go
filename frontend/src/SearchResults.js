@@ -1,25 +1,82 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import './App.css'; // Importáljuk a CSS fájlt
+import './App.css';
+import cities from './CostOfLivingIndexByCity.json';
+import countries from './CostOfLivingIndexByCountry.json';
 
 const SearchResults = () => {
   const [flights, setFlights] = useState(null);
   const [hotels, setHotels] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedFlight, setSelectedFlight] = useState(null); // Kiválasztott repülőjárat
-  const [selectedHotel, setSelectedHotel] = useState(null); // Kiválasztott hotel
-  const [showBookingPopup, setShowBookingPopup] = useState(false); // Foglalás popup megjelenítése
-  const [showFlightDetailsPopup, setShowFlightDetailsPopup] = useState(false); // Részletes információk popup megjelenítése
-  const [name, setName] = useState(""); // Név
-  const [email, setEmail] = useState(""); // Email
-  const [phone, setPhone] = useState(""); // Telefonszám
+  const [selectedFlight, setSelectedFlight] = useState(null);
+  const [selectedHotel, setSelectedHotel] = useState(null);
+  const [showBookingPopup, setShowBookingPopup] = useState(false);
+  const [showFlightDetailsPopup, setShowFlightDetailsPopup] = useState(false);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [costOfLivingDifference, setCostOfLivingDifference] = useState(null);
+  const [originCity, setOriginCity] = useState(null);
+  const [destinationCity, setDestinationCity] = useState(null);
 
   const urlParams = new URLSearchParams(window.location.search);
   const originCode = urlParams.get("originCode");
   const destinationCode = urlParams.get("destinationCode");
   const dateOfDeparture = urlParams.get("dateOfDeparture");
   const dateOfReturn = urlParams.get("dateOfReturn");
+
+  const getCityNameByIataCode = async (iataCode) => {
+    try {
+      const response = await axios.get('http://localhost:3000/get-city-name', {
+        params: { iataCode },
+      });
+  
+      if (response.data && response.data.cityName) {
+        return response.data.cityName;
+      } else {
+        throw new Error(`City not found for IATA code: ${iataCode}`);
+      }
+    } catch (error) {
+      console.error('Error fetching city name:', error);
+      throw error;
+    }
+  };
+  
+  const calculateCostOfLivingDifference = (originCity, destinationCity) => {
+    const originCityData = cities.cities.find(city => city.name === originCity);
+    const destinationCityData = cities.cities.find(city => city.name === destinationCity);
+  
+    let originIndex, destinationIndex;
+  
+    if (!originCityData) {
+      const originCountryData = countries.countries.find(country => country.name === originCity);
+      if (!originCountryData) {
+        throw new Error(`Origin city (${originCity}) and country not found in the database.`);
+      }
+      originIndex = originCountryData.score;
+    } else {
+      originIndex = originCityData.score;
+    }
+  
+    if (!destinationCityData) {
+      const destinationCountryData = countries.countries.find(country => country.name === destinationCity);
+      if (!destinationCountryData) {
+        throw new Error(`Destination city (${destinationCity}) and country not found in the database.`);
+      }
+      destinationIndex = destinationCountryData.score;
+    } else {
+      destinationIndex = destinationCityData.score;
+    }
+  
+    const percentageDifference = ((destinationIndex - originIndex) / originIndex) * 100;
+  
+    return {
+      percentageDifference,
+      destinationIndex,
+      originIndex
+    };
+  };
 
   useEffect(() => {
     const fetchFlights = async () => {
@@ -29,10 +86,8 @@ const SearchResults = () => {
           params: { originCode, destinationCode, dateOfDeparture, dateOfReturn },
         });
         setFlights(response.data);
-        console.log("Fetched flights:", response.data);
       } catch (err) {
         setError("Error fetching flights: " + err.message);
-        console.error(err);
       } finally {
         setLoading(false);
       }
@@ -57,45 +112,78 @@ const SearchResults = () => {
     }
   }, [originCode, destinationCode, dateOfDeparture, dateOfReturn]);
 
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div>{error}</div>;
-  if (!flights || flights.length === 0) return <div>No flights found</div>;
+  useEffect(() => {
+    if (flights && flights.length > 0) {
+      const originCode = flights[0].itineraries[0].segments[0].departure.iataCode;
+      const destinationCode = flights[0].itineraries[1].segments[0].departure.iataCode;
+  
+      const fetchCityNamesAndCalculateDifference = async () => {
+        try {
+          const origin = await getCityNameByIataCode(originCode);
+          const destination = await getCityNameByIataCode(destinationCode);
+  
+          if (origin && destination) {
+            setOriginCity(origin);
+            setDestinationCity(destination);
+            console.log('masodikgasdeci',originCity,destinationCity)
+            
+            const difference = calculateCostOfLivingDifference(origin, destination);
+            setCostOfLivingDifference(difference);
+          } else {
+            console.error('City names not found.');
+            setCostOfLivingDifference(null);
+          }
+        } catch (error) {
+          console.error(error.message);
+          setCostOfLivingDifference(null);
+        }
+      };
+  
+      fetchCityNamesAndCalculateDifference();
+    }
+  }, [flights]);
+  const formatDuration = (duration) => {
+    const match = duration.match(/PT(\d+H)?(\d+M)?/);
+    const hours = match[1] ? match[1].replace('H', '') : '0';
+    const minutes = match[2] ? match[2].replace('M', '') : '0';
+    return `${hours} óra ${minutes} perc`;
+  };
 
-  // Az első indulási és utolsó érkezési idő kinyerése
   const getFlightTimes = (itineraries) => {
     const departureTime = itineraries[0].segments[0].departure.at;
     const arrivalTime = itineraries[0].segments[itineraries[0].segments.length - 1].arrival.at;
     return { departureTime, arrivalTime };
   };
 
-  // Az oda- és visszaút időpontjainak kinyerése
   const getRoundTripTimes = (itineraries) => {
     if (itineraries.length === 2) {
       const outboundDeparture = itineraries[0].segments[0].departure.at;
       const outboundArrival = itineraries[0].segments[itineraries[0].segments.length - 1].arrival.at;
+      const outboundDuration = formatDuration(itineraries[0].duration);
+
       const returnDeparture = itineraries[1].segments[0].departure.at;
       const returnArrival = itineraries[1].segments[itineraries[1].segments.length - 1].arrival.at;
-      return { outboundDeparture, outboundArrival, returnDeparture, returnArrival };
+      const returnDuration = formatDuration(itineraries[1].duration);
+
+      return { outboundDeparture, outboundArrival, outboundDuration, returnDeparture, returnArrival, returnDuration };
     }
     return null;
   };
 
-  // Repülőjárat kiválasztása
   const handleSelectFlight = (flight) => {
     setSelectedFlight(flight);
   };
 
-  // Hotel kiválasztása
   const handleSelectHotel = (hotel) => {
     setSelectedHotel(hotel);
   };
 
-  // Foglalás gombra kattintás eseménykezelő
   const handleBookingClick = () => {
     setShowBookingPopup(true);
   };
 
-  // Foglalás adatok elküldése
+
+
   const handleBookingSubmit = async () => {
     if (!name || !email || !phone) {
       alert("Kérjük, töltsd ki az összes mezőt!");
@@ -108,10 +196,12 @@ const SearchResults = () => {
       name,
       email,
       phone,
+      costOfLivingDifference, // Hozzáadjuk a költségkülönbséget a foglalási adatokhoz
+      originCity, // Küldd át az originCode-t
+      destinationCity, // Küldd át a destinationCode-t
     };
 
     try {
-      // Küldjük a foglalás adatait a backendnek
       const response = await axios.post("http://localhost:3000/book", bookingDetails);
       if (response.status === 200) {
         alert("Foglalás sikeres! Hamarosan emailt kapsz a részletekkel.");
@@ -125,11 +215,14 @@ const SearchResults = () => {
     }
   };
 
-  // Részletes információk megjelenítése
   const handleShowFlightDetails = (flight) => {
     setSelectedFlight(flight);
     setShowFlightDetailsPopup(true);
   };
+
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>{error}</div>;
+  if (!flights || flights.length === 0) return <div>No flights found</div>;
 
   return (
     <div className="search-results-container">
@@ -139,6 +232,7 @@ const SearchResults = () => {
           {flights.map((flight, index) => {
             const { departureTime, arrivalTime } = getFlightTimes(flight.itineraries);
             const roundTripTimes = getRoundTripTimes(flight.itineraries);
+            const duration = formatDuration(flight.itineraries[0].duration);
 
             return (
               <div
@@ -148,10 +242,12 @@ const SearchResults = () => {
                 <h2>Flight {index + 1}</h2>
                 <p>Departure: {new Date(departureTime).toLocaleString()}</p>
                 <p>Arrival: {new Date(arrivalTime).toLocaleString()}</p>
+                <p>Travel Time (Outbound): {duration}</p>
                 {roundTripTimes && (
                   <>
                     <p>Return Departure: {new Date(roundTripTimes.returnDeparture).toLocaleString()}</p>
                     <p>Return Arrival: {new Date(roundTripTimes.returnArrival).toLocaleString()}</p>
+                    <p>Travel Time (Return): {roundTripTimes.returnDuration}</p>
                   </>
                 )}
                 <p>Price: {flight.price.total} {flight.price.currency}</p>
@@ -173,7 +269,7 @@ const SearchResults = () => {
               <div
                 key={index}
                 className={`hotel-card ${selectedHotel?.hotel.hotelId === hotel.hotel.hotelId ? "selected" : ""}`}
-                onClick={() => handleSelectHotel(hotel)} // Kattintásra kiválasztjuk a hotelt
+                onClick={() => handleSelectHotel(hotel)}
               >
                 <h3>{hotel.hotel.name}</h3>
                 <p>{hotel.hotel.description}</p>
@@ -186,7 +282,6 @@ const SearchResults = () => {
         )}
       </div>
 
-      {/* Foglalás gomb */}
       {selectedFlight && selectedHotel && (
         <div className="booking-button-container">
           <button className="booking-button" onClick={handleBookingClick}>
@@ -195,7 +290,6 @@ const SearchResults = () => {
         </div>
       )}
 
-      {/* Foglalás popup */}
       {showBookingPopup && (
         <div className="popup">
           <div className="popup-content">
@@ -239,7 +333,6 @@ const SearchResults = () => {
         </div>
       )}
 
-      {/* Részletes információk popup */}
       {showFlightDetailsPopup && selectedFlight && (
         <div className="popup">
           <div className="popup-content">
@@ -252,7 +345,7 @@ const SearchResults = () => {
             {selectedFlight.itineraries.map((itinerary, index) => (
               <div key={index}>
                 <h4>Itinerary {index + 1}</h4>
-                <p>Duration: {itinerary.duration}</p>
+                <p>Duration: {formatDuration(itinerary.duration)}</p>
                 {itinerary.segments.map((segment, segmentIndex) => (
                   <div key={segmentIndex}>
                     <p>Segment {segmentIndex + 1}:</p>

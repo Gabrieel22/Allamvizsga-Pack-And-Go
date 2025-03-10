@@ -4,6 +4,8 @@ import { Routes, Route, useNavigate } from 'react-router-dom';
 import { useLocation } from 'react-router-dom';
 import SearchResults from './SearchResults';
 
+
+
 const App = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [departureDate, setDepartureDate] = useState('');
@@ -19,6 +21,7 @@ const App = () => {
   const [isReturn, setIsReturn] = useState(true);
   const [hotels, setHotels] = useState([]);
   const [showHotels, setShowHotels] = useState(false);
+  const apiKey = process.env.REACT_APP_NINJA_API_KEY;
 
   const navigate = useNavigate();
 
@@ -29,9 +32,7 @@ const App = () => {
 
   const fetchSuggestions = async (query, setSuggestions) => {
     if (!query.trim()) return;
-
     const apiUrl = `https://api.api-ninjas.com/v1/airports?name=${query}`;
-    const apiKey = 'Sr/MW85xFBvy52Cq4QCquw==FVfWmwxGQLRnogFI';
 
     try {
       const response = await axios.get(apiUrl, {
