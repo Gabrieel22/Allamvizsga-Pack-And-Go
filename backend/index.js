@@ -8,8 +8,6 @@ import bcrypt from 'bcrypt';
 import mysql from 'mysql2/promise';
 import nodemailer from 'nodemailer';
 
-
-
 dotenv.config();
 
 // MySQL kapcsolódás
@@ -23,8 +21,8 @@ const db = mysql.createPool({
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: "galkristof44@gmail.com",//process.env.EMAIL_USER, // Gmail email cím
-    pass: "onpb qgyo tdrn uhfz"//process.env.EMAIL_PASS, // Gmail jelszó vagy app-specifikus jelszó
+    user:process.env.EMAIL_USER,
+    pass:process.env.EMAIL_PASS,
   },
 });
 
