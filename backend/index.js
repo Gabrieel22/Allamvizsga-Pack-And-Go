@@ -220,9 +220,43 @@ app.post('/login', async (req, res) => {
   }
 });
 
+
 app.post('/book', async (req, res) => {
   try {
     const { flight, hotel, name, email, phone, costOfLivingDifference, originCity, destinationCity } = req.body;
+
+    const getCountryNameByIataCode = async (iataCode) => {
+      try {
+        const response = await axios.get('http://localhost:3000/get-city-name', {
+          params: { iataCode },
+        });
+    
+        if (response.data && response.data.countryName) {
+          return response.data.countryName;
+        } else {
+          throw new Error(`City not found for IATA code: ${iataCode}`);
+        }
+      } catch (error) {
+        console.error('Error fetching city name:', error);
+        throw error;
+      }
+    };
+
+    const country = await getCountryNameByIataCode(flight.itineraries[0].segments[flight.itineraries[0].segments.length - 1].arrival.iataCode);
+
+    const apiUrl = `https://api.api-ninjas.com/v1/country?name=${country}`;
+
+    const apiResponse = await axios.get(apiUrl, {
+      headers: {
+        'X-Api-Key': process.env.NINJA_API_KEY,
+      },
+    });
+
+    let currency = "Ismeretlen pénznem";
+    if (apiResponse.data && apiResponse.data.length > 0 && apiResponse.data[0].currency) {
+      currency = apiResponse.data[0].currency.code +' , '+apiResponse.data[0].currency.name;
+    }
+    
 
     const mailOptions = {
       from: process.env.EMAIL_USER,
@@ -251,6 +285,7 @@ app.post('/book', async (req, res) => {
         Cost of Living Comparison:
         - ${costOfLivingDifference.percentageDifference.toFixed(2)}% ${costOfLivingDifference.percentageDifference > 0 ? 'drágább' : 'olcsóbb'} a célállomás, mint az indulási hely.
         - Ha ${originCity}-ben 1000$ kell egy hétre, akkor ${destinationCity}-ben körülbelül ${(1000 * (1 + costOfLivingDifference.percentageDifference / 100)).toFixed(2)}$ szükséges.
+        - Pénznem a célországban: ${currency}
       `,
     };
 
@@ -280,9 +315,10 @@ app.get('/get-city-name', async (req, res) => {
 
     if (response.status === 200 && response.data.length > 0) {
       const cityName = response.data[0].city;
-      return res.status(200).json({ cityName });
+      const countryName = response.data[0].country;
+      return res.status(200).json({ cityName,countryName });
     } else {
-      return res.status(404).json({ error: 'City not found' });
+      return res.status(404).json({ error: 'City or country not found' });
     }
   } catch (error) {
     console.error('Error fetching airport data:', error.message);

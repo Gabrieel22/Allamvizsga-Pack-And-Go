@@ -125,7 +125,6 @@ const SearchResults = () => {
           if (origin && destination) {
             setOriginCity(origin);
             setDestinationCity(destination);
-            console.log('masodikgasdeci',originCity,destinationCity)
             
             const difference = calculateCostOfLivingDifference(origin, destination);
             setCostOfLivingDifference(difference);
