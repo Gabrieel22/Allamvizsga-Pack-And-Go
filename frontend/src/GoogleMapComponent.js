@@ -36,7 +36,7 @@ const GoogleMapComponent = ({ origin, destination }) => {
   return (
     <GoogleMap
       mapContainerStyle={mapContainerStyle}
-      zoom={origin && destination ? 4 : 3} // Világtérkép nézet, ha mindkét pont megvan
+      zoom={origin && destination ? 3 : 3} // Világtérkép nézet, ha mindkét pont megvan
       center={center}
     >
       {origin && <Marker position={origin} title="Origin" />}
