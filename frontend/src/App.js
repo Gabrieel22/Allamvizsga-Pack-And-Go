@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Routes, Route, useNavigate } from 'react-router-dom';
-import { useLocation } from 'react-router-dom';
 import SearchResults from './SearchResults';
+import GoogleMapComponent from './GoogleMapComponent';
 
 const App = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -19,6 +19,9 @@ const App = () => {
   const [isReturn, setIsReturn] = useState(true);
   const [hotels, setHotels] = useState([]);
   const [showHotels, setShowHotels] = useState(false);
+  const [originCoords, setOriginCoords] = useState(null);
+  const [destinationCoords, setDestinationCoords] = useState(null);
+  const apiKey = process.env.REACT_APP_NINJA_API_KEY;
 
   const navigate = useNavigate();
 
@@ -27,11 +30,39 @@ const App = () => {
     setIsLoggedIn(storedLoginStatus === 'true');
   }, []);
 
+  // Koordináták lekérdezése API Ninjas-tól
+  const fetchCoordinates = async (iataCode, setCoords) => {
+    if (!iataCode) return;
+    const apiUrl = `https://api.api-ninjas.com/v1/airports?iata=${iataCode}`;
+
+    try {
+      const response = await axios.get(apiUrl, {
+        headers: { 'X-Api-Key': apiKey },
+      });
+      if (response.status === 200 && response.data.length > 0) {
+        const { latitude, longitude } = response.data[0];
+        setCoords({ lat: parseFloat(latitude), lng: parseFloat(longitude) });
+      } else {
+        console.error('No coordinates found for IATA:', iataCode);
+        setCoords(null);
+      }
+    } catch (error) {
+      console.error('Error fetching coordinates:', error.message);
+      setCoords(null);
+    }
+  };
+
+  useEffect(() => {
+    fetchCoordinates(originCode, setOriginCoords);
+  }, [originCode]);
+
+  useEffect(() => {
+    fetchCoordinates(destinationCode, setDestinationCoords);
+  }, [destinationCode]);
+
   const fetchSuggestions = async (query, setSuggestions) => {
     if (!query.trim()) return;
-
     const apiUrl = `https://api.api-ninjas.com/v1/airports?name=${query}`;
-    const apiKey = 'Sr/MW85xFBvy52Cq4QCquw==FVfWmwxGQLRnogFI';
 
     try {
       const response = await axios.get(apiUrl, {
@@ -94,11 +125,11 @@ const App = () => {
 
     try {
       const response = await axios.get(`http://localhost:3000/hotel-search?${queryParams}`);
-      setHotels(response.data.data || []); // Ha a válasz nem tartalmazza a data tömböt, akkor üres tömböt használunk
+      setHotels(response.data.data || []);
       setShowHotels(true);
     } catch (error) {
       console.error('Error fetching hotels:', error);
-      setHotels([]); // Ha hiba történik, akkor üres tömböt használunk
+      setHotels([]);
       alert('Failed to fetch hotels. Please try again later.');
     }
   };
@@ -125,99 +156,108 @@ const App = () => {
               </button>
             </header>
 
-            <main style={styles.searchContainer}>
-              <h1 style={styles.title}>Discover how to get anywhere</h1>
-              <h3 style={styles.subtitle}>BY PLANE, TRAIN, BUS, FERRY AND CAR</h3>
+            <main style={styles.mainContainer}>
+              <div style={styles.searchContainer}>
+                <h1 style={styles.title}>Discover how to get anywhere</h1>
+                <h3 style={styles.subtitle}>BY PLANE, TRAIN, BUS, FERRY AND CAR</h3>
 
-              <div>
-                <input
-                  type="text"
-                  style={styles.input}
-                  placeholder="Origin"
-                  value={originName}
-                  onChange={(e) => {
-                    setOriginName(e.target.value);
-                    fetchSuggestions(e.target.value, setSuggestedOrigins);
-                  }}
-                />
-                {suggestedOrigins.length > 0 && (
-                  <ul style={styles.suggestionList}>
-                    {suggestedOrigins.map((suggestion, index) => (
-                      <li
-                        key={suggestion.iataCode || index}
-                        style={styles.suggestionItem}
-                        onClick={() =>
-                          handleSuggestionClick(suggestion, setOriginName, setOriginCode)
-                        }
-                      >
-                        {suggestion.name} ({suggestion.iataCode})
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
+                <div>
+                  <input
+                    type="text"
+                    style={styles.input}
+                    placeholder="Origin"
+                    value={originName}
+                    onChange={(e) => {
+                      setOriginName(e.target.value);
+                      fetchSuggestions(e.target.value, setSuggestedOrigins);
+                    }}
+                  />
+                  {suggestedOrigins.length > 0 && (
+                    <ul style={styles.suggestionList}>
+                      {suggestedOrigins.map((suggestion, index) => (
+                        <li
+                          key={suggestion.iataCode || index}
+                          style={styles.suggestionItem}
+                          onClick={() =>
+                            handleSuggestionClick(suggestion, setOriginName, setOriginCode)
+                          }
+                        >
+                          {suggestion.name} ({suggestion.iataCode})
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
 
-              <div>
-                <input
-                  type="text"
-                  style={styles.input}
-                  placeholder="Destination"
-                  value={destinationName}
-                  onChange={(e) => {
-                    setDestinationName(e.target.value);
-                    fetchSuggestions(e.target.value, setSuggestedDestinations);
-                  }}
-                />
-                {suggestedDestinations.length > 0 && (
-                  <ul style={styles.suggestionList}>
-                    {suggestedDestinations.map((suggestion, index) => (
-                      <li
-                        key={suggestion.iataCode || index}
-                        style={styles.suggestionItem}
-                        onClick={() =>
-                          handleSuggestionClick(suggestion, setDestinationName, setDestinationCode)
-                        }
-                      >
-                        {suggestion.name} ({suggestion.iataCode})
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
+                <div>
+                  <input
+                    type="text"
+                    style={styles.input}
+                    placeholder="Destination"
+                    value={destinationName}
+                    onChange={(e) => {
+                      setDestinationName(e.target.value);
+                      fetchSuggestions(e.target.value, setSuggestedDestinations);
+                    }}
+                  />
+                  {suggestedDestinations.length > 0 && (
+                    <ul style={styles.suggestionList}>
+                      {suggestedDestinations.map((suggestion, index) => (
+                        <li
+                          key={suggestion.iataCode || index}
+                          style={styles.suggestionItem}
+                          onClick={() =>
+                            handleSuggestionClick(suggestion, setDestinationName, setDestinationCode)
+                          }
+                        >
+                          {suggestion.name} ({suggestion.iataCode})
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
 
-              <input
-                type="date"
-                style={styles.input}
-                placeholder="Departure Date"
-                value={departureDate}
-                onChange={(e) => setDepartureDate(e.target.value)}
-              />
-              {isReturn && (
                 <input
                   type="date"
                   style={styles.input}
-                  placeholder="Return Date"
-                  value={returnDate}
-                  onChange={(e) => setReturnDate(e.target.value)}
+                  placeholder="Departure Date"
+                  value={departureDate}
+                  onChange={(e) => setDepartureDate(e.target.value)}
                 />
-              )}
+                {isReturn && (
+                  <input
+                    type="date"
+                    style={styles.input}
+                    placeholder="Return Date"
+                    value={returnDate}
+                    onChange={(e) => setReturnDate(e.target.value)}
+                  />
+                )}
 
-              <div style={styles.passengerCounter}>
-                <label>Adults:</label>
-                <button onClick={() => setAdults(adults + 1)}>+</button>
-                <span>{adults}</span>
-                <button onClick={() => setAdults(adults > 1 ? adults - 1 : 1)}>-</button>
-              </div>
-              <div style={styles.passengerCounter}>
-                <label>Children:</label>
-                <button onClick={() => setChildren(children + 1)}>+</button>
-                <span>{children}</span>
-                <button onClick={() => setChildren(children > 0 ? children - 1 : 0)}>-</button>
+                <div style={styles.passengerCounter}>
+                  <label>Adults:</label>
+                  <button onClick={() => setAdults(adults + 1)}>+</button>
+                  <span>{adults}</span>
+                  <button onClick={() => setAdults(adults > 1 ? adults - 1 : 1)}>-</button>
+                </div>
+                <div style={styles.passengerCounter}>
+                  <label>Children:</label>
+                  <button onClick={() => setChildren(children + 1)}>+</button>
+                  <span>{children}</span>
+                  <button onClick={() => setChildren(children > 0 ? children - 1 : 0)}>-</button>
+                </div>
+
+                <button style={styles.searchButton} onClick={searchFlights}>
+                  Search Flights
+                </button>
               </div>
 
-              <button style={styles.searchButton} onClick={searchFlights}>
-                Search Flights
-              </button>
+              <div style={styles.mapContainer}>
+                <GoogleMapComponent
+                  origin={originCoords}
+                  destination={destinationCoords}
+                />
+              </div>
             </main>
 
             {showHotels && (
@@ -249,19 +289,94 @@ const App = () => {
 };
 
 const styles = {
-  container: { fontFamily: 'Arial, sans-serif' },
-  headerContainer: { display: 'flex', justifyContent: 'space-between', padding: '20px' },
-  logo: { width: '100px' },
-  searchContainer: { padding: '20px', backgroundColor: '#f9f9f9' },
-  title: { textAlign: 'center', fontSize: '24px' },
-  subtitle: { textAlign: 'center', fontSize: '16px', marginBottom: '20px' },
-  input: { display: 'block', width: '100%', padding: '10px', margin: '10px 0', borderRadius: '5px' },
-  passengerCounter: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '10px 0' },
-  searchButton: { width: '100%', padding: '15px', backgroundColor: 'blue', color: 'white', borderRadius: '5px', margin: '10px 0' },
-  suggestionList: { listStyleType: 'none', padding: 0, margin: 0, backgroundColor: '#fff', borderRadius: '5px', maxHeight: '200px', overflowY: 'auto', border: '1px solid #ccc' },
-  suggestionItem: { padding: '8px', cursor: 'pointer' },
-  hotelsContainer: { marginTop: '20px', padding: '20px', backgroundColor: '#f0f0f0', borderRadius: '8px' },
-  hotelCard: { backgroundColor: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)', marginBottom: '10px' },
+  container: {
+    fontFamily: 'Arial, sans-serif',
+    display: 'flex',
+    flexDirection: 'column',
+    height: '100vh',
+  },
+  headerContainer: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    padding: '20px',
+    backgroundColor: '#f0f0f0',
+  },
+  logo: {
+    width: '100px',
+  },
+  mainContainer: {
+    display: 'flex',
+    flex: 1,
+    padding: '20px',
+  },
+  searchContainer: {
+    flex: 0.3,
+    padding: '20px',
+    backgroundColor: '#f9f9f9',
+    marginRight: '20px',
+  },
+  mapContainer: {
+    flex: 0.7,
+    padding: '20px',
+    backgroundColor: '#f0f0f0',
+  },
+  title: {
+    textAlign: 'center',
+    fontSize: '24px',
+  },
+  subtitle: {
+    textAlign: 'center',
+    fontSize: '16px',
+    marginBottom: '20px',
+  },
+  input: {
+    display: 'block',
+    width: '100%',
+    padding: '10px',
+    margin: '10px 0',
+    borderRadius: '5px',
+  },
+  passengerCounter: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    margin: '10px 0',
+  },
+  searchButton: {
+    width: '100%',
+    padding: '15px',
+    backgroundColor: 'blue',
+    color: 'white',
+    borderRadius: '5px',
+    margin: '10px 0',
+  },
+  suggestionList: {
+    listStyleType: 'none',
+    padding: 0,
+    margin: 0,
+    backgroundColor: '#fff',
+    borderRadius: '5px',
+    maxHeight: '200px',
+    overflowY: 'auto',
+    border: '1px solid #ccc',
+  },
+  suggestionItem: {
+    padding: '8px',
+    cursor: 'pointer',
+  },
+  hotelsContainer: {
+    marginTop: '20px',
+    padding: '20px',
+    backgroundColor: '#f0f0f0',
+    borderRadius: '8px',
+  },
+  hotelCard: {
+    backgroundColor: '#fff',
+    padding: '20px',
+    borderRadius: '8px',
+    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+    marginBottom: '10px',
+  },
 };
 
 export default App;
