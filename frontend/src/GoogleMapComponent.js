@@ -11,13 +11,11 @@ const GoogleMapComponent = ({ origin, destination }) => {
     googleMapsApiKey: process.env.REACT_APP_GOOGLE_API_KEY,
   });
 
-  // Alapértelmezett középpont (Budapest), ha nincs koordináta
   const defaultCenter = {
     lat: 47.4979,
     lng: 19.0402,
   };
 
-  // Dinamikus középpont (átlag a két koordináta között, ha mindkettő megvan)
   const center = origin && destination
     ? {
         lat: (origin.lat + destination.lat) / 2,
@@ -25,7 +23,6 @@ const GoogleMapComponent = ({ origin, destination }) => {
       }
     : defaultCenter;
 
-  // Polyline az útvonalhoz
   const path = [];
   if (origin) path.push(origin);
   if (destination) path.push(destination);
@@ -36,7 +33,7 @@ const GoogleMapComponent = ({ origin, destination }) => {
   return (
     <GoogleMap
       mapContainerStyle={mapContainerStyle}
-      zoom={origin && destination ? 3 : 3} // Világtérkép nézet, ha mindkét pont megvan
+      zoom={origin && destination ? 3 : 3}
       center={center}
     >
       {origin && <Marker position={origin} title="Origin" />}

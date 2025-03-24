@@ -78,6 +78,11 @@ const SearchResults = () => {
     };
   };
 
+  const handleViewHotel = (hotelName) => {
+    const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(hotelName)}`;
+    window.open(searchUrl, '_blank');
+  };
+
   useEffect(() => {
     const fetchFlights = async () => {
       setLoading(true);
@@ -141,6 +146,7 @@ const SearchResults = () => {
       fetchCityNamesAndCalculateDifference();
     }
   }, [flights]);
+
   const formatDuration = (duration) => {
     const match = duration.match(/PT(\d+H)?(\d+M)?/);
     const hours = match[1] ? match[1].replace('H', '') : '0';
@@ -181,8 +187,6 @@ const SearchResults = () => {
     setShowBookingPopup(true);
   };
 
-
-
   const handleBookingSubmit = async () => {
     if (!name || !email || !phone) {
       alert("Kérjük, töltsd ki az összes mezőt!");
@@ -195,9 +199,9 @@ const SearchResults = () => {
       name,
       email,
       phone,
-      costOfLivingDifference, // Hozzáadjuk a költségkülönbséget a foglalási adatokhoz
-      originCity, // Küldd át az originCode-t
-      destinationCity, // Küldd át a destinationCode-t
+      costOfLivingDifference,
+      originCity,
+      destinationCity,
     };
 
     try {
@@ -268,13 +272,21 @@ const SearchResults = () => {
               <div
                 key={index}
                 className={`hotel-card ${selectedHotel?.hotel.hotelId === hotel.hotel.hotelId ? "selected" : ""}`}
-                onClick={() => handleSelectHotel(hotel)}
               >
                 <h3>{hotel.hotel.name}</h3>
                 <p>{hotel.hotel.description}</p>
                 <p>Price: {hotel.offers[0].price.total} {hotel.offers[0].price.currency}</p>
                 <p>Check-In: {hotel.offers[0].checkInDate}</p>
                 <p>Check-Out: {hotel.offers[0].checkOutDate}</p>
+                <div className="hotel-card-buttons">
+                  <button onClick={() => handleSelectHotel(hotel)}>Kiválaszt</button>
+                  <button 
+                    onClick={() => handleViewHotel(hotel.hotel.name)}
+                    aria-label={`View ${hotel.hotel.name} on Google`}
+                  >
+                    Megtekintés
+                  </button>
+                </div>
               </div>
             ))}
           </div>
