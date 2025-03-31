@@ -19,6 +19,7 @@ const SearchResults = () => {
   const [costOfLivingDifference, setCostOfLivingDifference] = useState(null);
   const [originCity, setOriginCity] = useState(null);
   const [destinationCity, setDestinationCity] = useState(null);
+  const [fetchingCityCode, setFetchingCityCode] = useState(false);
 
   const urlParams = new URLSearchParams(window.location.search);
   const originCode = urlParams.get("originCode");
@@ -39,6 +40,21 @@ const SearchResults = () => {
       }
     } catch (error) {
       console.error('Error fetching city name:', error);
+      throw error;
+    }
+  };
+
+  const getCityCodeByIataCode = async (iataCode) => {
+    try {
+      const response = await axios.get(`http://localhost:3000/get-city-code/${iataCode}`);
+      
+      if (response.data && response.data.cityCode) {
+        return response.data.cityCode;
+      } else {
+        throw new Error(`City code not found for IATA code: ${iataCode}`);
+      }
+    } catch (error) {
+      console.error('Error fetching city code:', error);
       throw error;
     }
   };
@@ -100,14 +116,20 @@ const SearchResults = () => {
 
     const fetchHotels = async () => {
       try {
+        setFetchingCityCode(true);
+        const cityCode = await getCityCodeByIataCode(destinationCode);
         const response = await axios.get("http://localhost:3000/hotel-search", {
-          params: { cityName: destinationCode, checkInDate: dateOfDeparture, checkOutDate: dateOfReturn || dateOfDeparture },
+          params: { cityName: cityCode, checkInDate: dateOfDeparture, checkOutDate: dateOfReturn || dateOfDeparture },
         });
-        const sortedHotels = response.data.data.sort((a, b) => parseFloat(a.offers[0].price.total) - parseFloat(b.offers[0].price.total));
-        setHotels(sortedHotels || []);
+        const sortedHotels = response.data.data?.sort((a, b) => 
+          parseFloat(a.offers[0].price.total) - parseFloat(b.offers[0].price.total)
+        ) || [];
+        setHotels(sortedHotels);
       } catch (err) {
         console.error('Error fetching hotels:', err);
         setHotels([]);
+      } finally {
+        setFetchingCityCode(false);
       }
     };
 
@@ -264,7 +286,9 @@ const SearchResults = () => {
 
       <div className="hotels-column">
         <h2>Hotels in {destinationCode}</h2>
-        {!hotels || hotels.length === 0 ? (
+        {fetchingCityCode ? (
+          <div>Searching for city code...</div>
+        ) : !hotels || hotels.length === 0 ? (
           <div>No hotels found.</div>
         ) : (
           <div>

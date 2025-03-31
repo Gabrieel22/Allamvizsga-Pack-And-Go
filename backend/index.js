@@ -49,6 +49,69 @@ if (!NINJA_API_KEY) {
   process.exit(1);
 }
 
+// Városkód lekérése IATA kód alapján
+app.get('/get-city-code/:iataCode', async (req, res) => {
+  const { iataCode } = req.params;
+  
+  if (!iataCode) {
+    return res.status(400).json({ error: 'IATA code is required' });
+  }
+
+  try {
+    // Amadeus API hívás a repülőtér adatainak lekéréséhez
+    const response = await amadeus.referenceData.locations.get({
+      keyword: iataCode,
+      subType: "AIRPORT",
+      view: "FULL" // Biztosítjuk, hogy minden szükséges adatot kapjunk
+    });
+
+    // Ellenőrizzük a választ és kinyerjük a cityCode-ot
+    if (response.result && response.result.data && response.result.data.length > 0) {
+      const airportData = response.result.data[0];
+      
+      if (airportData.address && airportData.address.cityCode) {
+        const cityCode = airportData.address.cityCode;
+        return res.status(200).json({ cityCode });
+      }
+      
+      // Ha nincs cityCode, de van cityName, megpróbálhatjuk kezelni
+      if (airportData.address && airportData.address.cityName) {
+        console.warn(`No cityCode found for ${iataCode}, trying to get city code from cityName`);
+        
+        // Alternatív megoldás: városnév alapján keresünk cityCode-ot
+        const cityResponse = await amadeus.referenceData.locations.get({
+          keyword: airportData.address.cityName,
+          subType: "CITY"
+        });
+        
+        if (cityResponse.result.data && cityResponse.result.data.length > 0) {
+          const cityCode = cityResponse.result.data[0].iataCode;
+          return res.status(200).json({ cityCode });
+        }
+      }
+      
+      return res.status(404).json({ error: 'City code not found in airport data' });
+    } else {
+      return res.status(404).json({ error: 'Airport not found' });
+    }
+  } catch (error) {
+    console.error('Error fetching city code:', error);
+    
+    // Részletesebb hibaüzenet
+    const errorDetails = {
+      message: error.message,
+      code: error.code,
+      statusCode: error.response?.statusCode,
+      apiError: error.response?.result?.errors
+    };
+    
+    return res.status(500).json({ 
+      error: 'Failed to fetch city code',
+      details: errorDetails
+    });
+  }
+});
+
 app.get('/city-and-airport-search/:parameter', async (req, res) => {
   const parameter = req.params.parameter;
   const apiUrl = `https://api.api-ninjas.com/v1/airports?name=${parameter}`;
@@ -218,7 +281,6 @@ app.post('/login', async (req, res) => {
   }
 });
 
-
 app.post('/book', async (req, res) => {
   try {
     const { flight, hotel, name, email, phone, costOfLivingDifference, originCity, destinationCity } = req.body;
@@ -255,7 +317,6 @@ app.post('/book', async (req, res) => {
       currency = apiResponse.data[0].currency.code +' , '+apiResponse.data[0].currency.name;
     }
     
-
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: email,
@@ -314,7 +375,7 @@ app.get('/get-city-name', async (req, res) => {
     if (response.status === 200 && response.data.length > 0) {
       const cityName = response.data[0].city;
       const countryName = response.data[0].country;
-      return res.status(200).json({ cityName,countryName });
+      return res.status(200).json({ cityName, countryName });
     } else {
       return res.status(404).json({ error: 'City or country not found' });
     }
