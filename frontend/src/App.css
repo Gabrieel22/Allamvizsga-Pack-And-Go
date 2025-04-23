@@ -1,281 +1,659 @@
-/* App.css */
-.App {
-  text-align: center;
+/* Global Styles */
+:root {
+  --primary-color: #2563eb;
+  --secondary-color: #1e40af;
+  --accent-color: #3b82f6;
+  --text-color: #1f2937;
+  --light-text: #6b7280;
+  --background-color: #f9fafb;
+  --card-bg: #ffffff;
+  --border-color: #e5e7eb;
+  --success-color: #10b981;
+  --error-color: #ef4444;
+  --warning-color: #f59e0b;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+body {
+  background-color: var(--background-color);
+  color: var(--text-color);
+  line-height: 1.6;
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+/* App Container */
+.app-container {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+  min-height: 100vh;
 }
 
-.App-link {
-  color: #61dafb;
-}
-
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.search-results-container {
+/* Header Styles */
+.app-header {
   display: flex;
   justify-content: space-between;
-  padding: 20px;
-}
-
-.flights-column {
-  flex: 1;
-  margin-right: 20px;
-}
-
-.hotels-column {
-  flex: 1;
-  margin-left: 20px;
-}
-
-.flight-card, .hotel-card {
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  padding: 16px;
-  margin-bottom: 16px;
-  background-color: #f9f9f9;
-  cursor: pointer;
-}
-
-.flight-card.selected, .hotel-card.selected {
-  border: 2px solid #007bff; /* Kiválasztott kártya kiemelése */
-}
-
-.flight-card:hover, .hotel-card:hover {
-  background-color: #f0f0f0;
-}
-
-.flight-card h2, .hotel-card h3 {
-  margin-top: 0;
-}
-
-.flight-card p, .hotel-card p {
-  margin: 8px 0;
-}
-
-.booking-button-container {
-  text-align: center;
-  margin-top: 20px;
-}
-
-.booking-button {
-  padding: 10px 20px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-.booking-button:hover {
-  background-color: #0056b3;
-}
-
-.popup {
-  position: fixed;
+  align-items: center;
+  padding: 1rem 5%;
+  background-color: var(--card-bg);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  position: sticky;
   top: 0;
+  z-index: 100;
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.logo {
+  height: 40px;
+  width: auto;
+}
+
+.brand-name {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--primary-color);
+}
+
+.nav-links {
+  display: flex;
+  gap: 2rem;
+}
+
+.nav-link {
+  text-decoration: none;
+  color: var(--text-color);
+  font-weight: 500;
+  padding: 0.5rem 0;
+  position: relative;
+  transition: color 0.3s ease;
+}
+
+.nav-link:hover {
+  color: var(--primary-color);
+}
+
+.nav-link.active {
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
+.nav-link.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
   left: 0;
   width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
+  height: 2px;
+  background-color: var(--primary-color);
+}
+
+.user-actions {
   display: flex;
-  justify-content: center;
+  gap: 1rem;
+}
+
+.login-btn, .signup-btn {
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.login-btn {
+  background-color: transparent;
+  border: 1px solid var(--primary-color);
+  color: var(--primary-color);
+}
+
+.login-btn:hover {
+  background-color: rgba(37, 99, 235, 0.1);
+}
+
+.signup-btn {
+  background-color: var(--primary-color);
+  border: 1px solid var(--primary-color);
+  color: white;
+}
+
+.signup-btn:hover {
+  background-color: var(--secondary-color);
+  border-color: var(--secondary-color);
+}
+
+.user-profile {
+  display: flex;
   align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
 }
 
-.popup-content {
+.user-icon {
+  color: var(--primary-color);
+  font-size: 1.2rem;
+}
+
+/* Search Section */
+.search-section {
+  padding: 2rem 5%;
+  background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+  color: white;
+}
+
+.search-tabs {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 0.5rem;
+  color: white;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.tab:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.tab.active {
   background-color: white;
-  padding: 20px;
-  border-radius: 8px;
-  max-width: 600px;
+  color: var(--primary-color);
+}
+
+.search-container {
+  background-color: var(--card-bg);
+  border-radius: 1rem;
+  padding: 2rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.search-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.form-row {
+  display: flex;
+  gap: 1rem;
+}
+
+.input-group {
+  flex: 1;
+  position: relative;
+}
+
+.input-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: var(--text-color);
+}
+
+.input-with-icon {
+  position: relative;
+}
+
+.input-with-icon .input-icon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--light-text);
+}
+
+.input-with-icon input {
   width: 100%;
-  max-height: 80vh;
+  padding: 0.75rem 1rem 0.75rem 2.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  transition: border-color 0.3s ease;
+}
+
+.input-with-icon input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+}
+
+.suggestion-dropdown {
+  position: absolute;
+  width: 100%;
+  max-height: 300px;
   overflow-y: auto;
+  background-color: white;
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+  list-style: none;
 }
 
-.popup-content h2 {
-  margin-top: 0;
+.suggestion-dropdown li {
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
 }
 
-.popup-content form {
+.suggestion-dropdown li:hover {
+  background-color: var(--background-color);
+}
+
+.swap-button {
+  align-self: flex-end;
+  margin-bottom: 2rem;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.swap-button:hover {
+  background-color: var(--secondary-color);
+}
+
+.passenger-selector {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  cursor: pointer;
+  position: relative;
+}
+
+.passenger-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  background-color: white;
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  padding: 1rem;
+  z-index: 10;
+}
+
+.passenger-option {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.passenger-option:last-child {
+  margin-bottom: 0;
+}
+
+.counter {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.counter button {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid var(--border-color);
+  background-color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.counter button:hover {
+  background-color: var(--background-color);
+}
+
+.arrow-icon {
+  transition: transform 0.3s ease;
+}
+
+.arrow-icon.up {
+  transform: rotate(180deg);
+}
+
+.form-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.search-button, .secondary-button {
+  padding: 0.875rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.search-button {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  flex: 1;
+}
+
+.search-button:hover {
+  background-color: var(--secondary-color);
+}
+
+.secondary-button {
+  background-color: transparent;
+  border: 1px solid var(--primary-color);
+  color: var(--primary-color);
+  flex: 1;
+}
+
+.secondary-button:hover {
+  background-color: rgba(37, 99, 235, 0.1);
+}
+
+/* Map and Results Container */
+.map-results-container {
   display: flex;
   flex-direction: column;
+  padding: 2rem 5%;
+  gap: 2rem;
 }
 
-.popup-content label {
-  margin-bottom: 10px;
+.map-container {
+  height: 400px;
+  border-radius: 1rem;
+  overflow: hidden;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
-.popup-content input {
-  padding: 8px;
-  margin-top: 5px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
+.hotel-results {
+  margin-top: 2rem;
 }
 
-.popup-content button {
-  margin-top: 10px;
-  padding: 10px 20px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
+.section-title {
+  font-size: 1.5rem;
+  margin-bottom: 1.5rem;
+  color: var(--text-color);
 }
 
-.popup-content button:hover {
-  background-color: #0056b3;
+.hotel-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
 }
 
-/* Új gombok stílusa a repülőjárat kártyákon */
-.flight-card button {
-  margin: 5px;
-  padding: 5px 10px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
+.hotel-card {
+  background-color: var(--card-bg);
+  border-radius: 0.75rem;
+  overflow: hidden;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.flight-card button:hover {
-  background-color: #0056b3;
+.hotel-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
 }
 
-/* További stílusok a részletes információk popup-hoz */
-.popup-content h3 {
-  margin-top: 10px;
+.hotel-image {
+  height: 200px;
+  overflow: hidden;
 }
 
-.popup-content p {
-  margin: 5px 0;
+.hotel-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
 }
 
-.popup-content .itinerary {
-  margin-bottom: 20px;
+.hotel-card:hover .hotel-image img {
+  transform: scale(1.05);
 }
 
-.popup-content .segment {
-  margin-left: 20px;
+.hotel-details {
+  padding: 1.5rem;
 }
 
-.popup-content .price-details {
-  margin-top: 20px;
+.hotel-details h3 {
+  font-size: 1.25rem;
+  margin-bottom: 0.5rem;
 }
 
-.popup-content .price-details p {
-  margin: 5px 0;
+.hotel-description {
+  color: var(--light-text);
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
-.popup-content .price-details .fee {
-  margin-left: 20px;
+.price-info {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
 }
 
-.popup-content .price-details .service {
-  margin-left: 20px;
+.price {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--primary-color);
 }
 
-.popup-content .price-details .grand-total {
-  font-weight: bold;
-  margin-top: 10px;
+.per-night {
+  color: var(--light-text);
+  font-size: 0.875rem;
 }
 
-/* Stílus a foglalás popup-hoz */
-.popup-content .booking-form {
+.date-info {
   display: flex;
   flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+  color: var(--light-text);
+  margin-bottom: 1.5rem;
 }
 
-.popup-content .booking-form label {
-  margin-bottom: 10px;
-}
-
-.popup-content .booking-form input {
-  padding: 8px;
-  margin-top: 5px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-}
-
-.popup-content .booking-form button {
-  margin-top: 10px;
-  padding: 10px 20px;
-  background-color: #007bff;
+.view-button {
+  width: 100%;
+  padding: 0.75rem;
+  background-color: var(--primary-color);
   color: white;
   border: none;
-  border-radius: 5px;
+  border-radius: 0.375rem;
+  font-weight: 500;
   cursor: pointer;
+  transition: background-color 0.3s ease;
 }
 
-.popup-content .booking-form button:hover {
-  background-color: #0056b3;
+.view-button:hover {
+  background-color: var(--secondary-color);
 }
 
-/* Stílus a részletes információk popup bezáró gombjához */
-.popup-content .close-button {
-  margin-top: 10px;
-  padding: 10px 20px;
-  background-color: #dc3545;
+.no-results {
+  text-align: center;
+  padding: 2rem;
+  color: var(--light-text);
+  grid-column: 1 / -1;
+}
+
+/* Footer Styles */
+.app-footer {
+  background-color: #1f2937;
   color: white;
-  border: none;
-  border-radius: 5px;
+  padding: 3rem 5% 1.5rem;
+  margin-top: auto;
+}
+
+.footer-content {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.footer-section h3 {
+  font-size: 1.125rem;
+  margin-bottom: 1rem;
+  color: white;
+}
+
+.footer-section ul {
+  list-style: none;
+}
+
+.footer-section li {
+  margin-bottom: 0.75rem;
   cursor: pointer;
+  transition: color 0.3s ease;
 }
 
-.popup-content .close-button:hover {
-  background-color: #c82333;
+.footer-section li:hover {
+  color: var(--accent-color);
 }
 
-.hotel-card-buttons {
+.newsletter-form {
   display: flex;
-  gap: 10px;
-  margin-top: 10px;
+  margin-top: 1rem;
 }
 
-.hotel-card-buttons button {
-  padding: 8px 12px;
+.newsletter-form input {
+  flex: 1;
+  padding: 0.75rem;
   border: none;
-  border-radius: 4px;
+  border-radius: 0.375rem 0 0 0.375rem;
+}
+
+.newsletter-form button {
+  padding: 0 1rem;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 0 0.375rem 0.375rem 0;
   cursor: pointer;
-  font-size: 14px;
+  transition: background-color 0.3s ease;
 }
 
-.hotel-card-buttons button:first-child {
-  background-color: #4CAF50;
+.newsletter-form button:hover {
+  background-color: var(--secondary-color);
+}
+
+.footer-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.legal-links {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.legal-links a {
+  color: rgba(255, 255, 255, 0.7);
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.legal-links a:hover {
   color: white;
 }
 
-.hotel-card-buttons button:last-child {
-  background-color: #2196F3;
-  color: white;
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .form-row {
+    flex-direction: column;
+  }
+  
+  .swap-button {
+    align-self: center;
+    margin: 0.5rem 0;
+    transform: rotate(90deg);
+  }
 }
 
-.hotel-card-buttons button:hover {
-  opacity: 0.9;
+@media (max-width: 768px) {
+  .app-header {
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem;
+  }
+  
+  .nav-links {
+    gap: 1rem;
+  }
+  
+  .user-actions {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .search-section {
+    padding: 1.5rem;
+  }
+  
+  .search-container {
+    padding: 1.5rem;
+  }
+  
+  .footer-content {
+    grid-template-columns: 1fr 1fr;
+  }
+  
+  .footer-bottom {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+  
+  .legal-links {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .footer-content {
+    grid-template-columns: 1fr;
+  }
+  
+  .form-actions {
+    flex-direction: column;
+  }
+  
+  .hotel-grid {
+    grid-template-columns: 1fr;
+  }
 }

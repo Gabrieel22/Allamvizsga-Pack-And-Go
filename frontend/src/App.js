@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Routes, Route, useNavigate } from 'react-router-dom';
+import { Routes, Route, useNavigate, Link } from 'react-router-dom';
 import SearchResults from './SearchResults';
 import GoogleMapComponent from './GoogleMapComponent';
+import { FaUser, FaPlane, FaHotel, FaCalendarAlt, FaUserFriends, FaExchangeAlt } from 'react-icons/fa';
+import { IoIosArrowDown } from 'react-icons/io';
+import './App.css';
 
 const App = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -21,6 +24,8 @@ const App = () => {
   const [showHotels, setShowHotels] = useState(false);
   const [originCoords, setOriginCoords] = useState(null);
   const [destinationCoords, setDestinationCoords] = useState(null);
+  const [activeTab, setActiveTab] = useState('flights');
+  const [showPassengerDropdown, setShowPassengerDropdown] = useState(false);
   const apiKey = process.env.REACT_APP_NINJA_API_KEY;
 
   const navigate = useNavigate();
@@ -30,7 +35,6 @@ const App = () => {
     setIsLoggedIn(storedLoginStatus === 'true');
   }, []);
 
-  // Koordináták lekérdezése API Ninjas-tól
   const fetchCoordinates = async (iataCode, setCoords) => {
     if (!iataCode) return;
     const apiUrl = `https://api.api-ninjas.com/v1/airports?iata=${iataCode}`;
@@ -135,248 +139,316 @@ const App = () => {
   };
 
   return (
-    <Routes>
-      <Route
-        path="/"
-        element={
-          <div style={styles.container}>
-            <header style={styles.headerContainer}>
-              <img src="./assets/pictures/logo.png" alt="Logo" style={styles.logo} />
-              <button
-                onClick={() => {
-                  const storedLoginStatus = localStorage.getItem('isLoggedIn');
-                  if (storedLoginStatus === 'true') {
-                    // Navigate to profile
-                  } else {
-                    // Navigate to login page
-                  }
-                }}
-              >
-                Profile
-              </button>
-            </header>
+    <div className="app-container">
+      <header className="app-header">
+        <div className="logo-container">
+          <img src="./assets/images/logo.png" alt="PackAndGo Logo" className="logo" />
+          <h1 className="brand-name">PackAndGo</h1>
+        </div>
+        <nav className="nav-links">
+          <Link to="/" className="nav-link active">Home</Link>
+          <Link to="/flights" className="nav-link">Flights</Link>
+          <Link to="/hotels" className="nav-link">Hotels</Link>
+          <Link to="/deals" className="nav-link">Deals</Link>
+        </nav>
+        <div className="user-actions">
+          {isLoggedIn ? (
+            <div className="user-profile">
+              <FaUser className="user-icon" />
+              <span>My Account</span>
+            </div>
+          ) : (
+            <>
+              <button className="login-btn">Sign In</button>
+              <button className="signup-btn">Sign Up</button>
+            </>
+          )}
+        </div>
+      </header>
 
-            <main style={styles.mainContainer}>
-              <div style={styles.searchContainer}>
-                <h1 style={styles.title}>Discover how to get anywhere</h1>
-                <h3 style={styles.subtitle}>BY PLANE, TRAIN, BUS, FERRY AND CAR</h3>
+      <div className="search-section">
+        <div className="search-tabs">
+          <button 
+            className={`tab ${activeTab === 'flights' ? 'active' : ''}`}
+            onClick={() => setActiveTab('flights')}
+          >
+            <FaPlane /> Flights
+          </button>
+          <button 
+            className={`tab ${activeTab === 'hotels' ? 'active' : ''}`}
+            onClick={() => setActiveTab('hotels')}
+          >
+            <FaHotel /> Hotels
+          </button>
+        </div>
 
-                <div>
+        <div className="search-container">
+          <div className="search-form">
+            <div className="form-row">
+              <div className="input-group origin">
+                <label>From</label>
+                <div className="input-with-icon">
+                  <FaPlane className="input-icon" />
                   <input
                     type="text"
-                    style={styles.input}
-                    placeholder="Origin"
+                    placeholder="City or Airport"
                     value={originName}
                     onChange={(e) => {
                       setOriginName(e.target.value);
                       fetchSuggestions(e.target.value, setSuggestedOrigins);
                     }}
                   />
-                  {suggestedOrigins.length > 0 && (
-                    <ul style={styles.suggestionList}>
-                      {suggestedOrigins.map((suggestion, index) => (
-                        <li
-                          key={suggestion.iataCode || index}
-                          style={styles.suggestionItem}
-                          onClick={() =>
-                            handleSuggestionClick(suggestion, setOriginName, setOriginCode)
-                          }
-                        >
-                          {suggestion.name} ({suggestion.iataCode})
-                        </li>
-                      ))}
-                    </ul>
-                  )}
                 </div>
+                {suggestedOrigins.length > 0 && (
+                  <ul className="suggestion-dropdown">
+                    {suggestedOrigins.map((suggestion, index) => (
+                      <li
+                        key={suggestion.iataCode || index}
+                        onClick={() =>
+                          handleSuggestionClick(suggestion, setOriginName, setOriginCode)
+                        }
+                      >
+                        {suggestion.name} ({suggestion.iataCode})
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
 
-                <div>
+              <button className="swap-button" onClick={() => {
+                const tempName = originName;
+                const tempCode = originCode;
+                setOriginName(destinationName);
+                setOriginCode(destinationCode);
+                setDestinationName(tempName);
+                setDestinationCode(tempCode);
+              }}>
+                <FaExchangeAlt />
+              </button>
+
+              <div className="input-group destination">
+                <label>To</label>
+                <div className="input-with-icon">
+                  <FaPlane className="input-icon" />
                   <input
                     type="text"
-                    style={styles.input}
-                    placeholder="Destination"
+                    placeholder="City or Airport"
                     value={destinationName}
                     onChange={(e) => {
                       setDestinationName(e.target.value);
                       fetchSuggestions(e.target.value, setSuggestedDestinations);
                     }}
                   />
-                  {suggestedDestinations.length > 0 && (
-                    <ul style={styles.suggestionList}>
-                      {suggestedDestinations.map((suggestion, index) => (
-                        <li
-                          key={suggestion.iataCode || index}
-                          style={styles.suggestionItem}
-                          onClick={() =>
-                            handleSuggestionClick(suggestion, setDestinationName, setDestinationCode)
-                          }
-                        >
-                          {suggestion.name} ({suggestion.iataCode})
-                        </li>
-                      ))}
-                    </ul>
-                  )}
                 </div>
+                {suggestedDestinations.length > 0 && (
+                  <ul className="suggestion-dropdown">
+                    {suggestedDestinations.map((suggestion, index) => (
+                      <li
+                        key={suggestion.iataCode || index}
+                        onClick={() =>
+                          handleSuggestionClick(suggestion, setDestinationName, setDestinationCode)
+                        }
+                      >
+                        {suggestion.name} ({suggestion.iataCode})
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </div>
 
-                <input
-                  type="date"
-                  style={styles.input}
-                  placeholder="Departure Date"
-                  value={departureDate}
-                  onChange={(e) => setDepartureDate(e.target.value)}
-                />
-                {isReturn && (
+            <div className="form-row">
+              <div className="input-group">
+                <label>Departure</label>
+                <div className="input-with-icon">
+                  <FaCalendarAlt className="input-icon" />
                   <input
                     type="date"
-                    style={styles.input}
-                    placeholder="Return Date"
-                    value={returnDate}
-                    onChange={(e) => setReturnDate(e.target.value)}
+                    value={departureDate}
+                    onChange={(e) => setDepartureDate(e.target.value)}
                   />
-                )}
-
-                <div style={styles.passengerCounter}>
-                  <label>Adults:</label>
-                  <button onClick={() => setAdults(adults + 1)}>+</button>
-                  <span>{adults}</span>
-                  <button onClick={() => setAdults(adults > 1 ? adults - 1 : 1)}>-</button>
                 </div>
-                <div style={styles.passengerCounter}>
-                  <label>Children:</label>
-                  <button onClick={() => setChildren(children + 1)}>+</button>
-                  <span>{children}</span>
-                  <button onClick={() => setChildren(children > 0 ? children - 1 : 0)}>-</button>
-                </div>
-
-                <button style={styles.searchButton} onClick={searchFlights}>
-                  Search Flights
-                </button>
               </div>
 
-              <div style={styles.mapContainer}>
-                <GoogleMapComponent
-                  origin={originCoords}
-                  destination={destinationCoords}
-                />
-              </div>
-            </main>
+              {isReturn && (
+                <div className="input-group">
+                  <label>Return</label>
+                  <div className="input-with-icon">
+                    <FaCalendarAlt className="input-icon" />
+                    <input
+                      type="date"
+                      value={returnDate}
+                      onChange={(e) => setReturnDate(e.target.value)}
+                    />
+                  </div>
+                </div>
+              )}
 
-            {showHotels && (
-              <div style={styles.hotelsContainer}>
-                <h2>Hotels in {destinationCode}</h2>
-                {hotels.length === 0 ? (
-                  <div>No hotels found.</div>
-                ) : (
-                  <div>
-                    {hotels.map((hotel, index) => (
-                      <div key={index} style={styles.hotelCard}>
-                        <h3>{hotel.hotel.name}</h3>
-                        <p>{hotel.hotel.description}</p>
-                        <p>Price: {hotel.offers[0].price.total} {hotel.offers[0].price.currency}</p>
-                        <p>Check-In: {hotel.offers[0].checkInDate}</p>
-                        <p>Check-Out: {hotel.offers[0].checkOutDate}</p>
+              <div className="input-group passengers">
+                <label>Passengers</label>
+                <div 
+                  className="passenger-selector"
+                  onClick={() => setShowPassengerDropdown(!showPassengerDropdown)}
+                >
+                  <FaUserFriends className="input-icon" />
+                  <span>{adults + children} Traveler{adults + children !== 1 ? 's' : ''}</span>
+                  <IoIosArrowDown className={`arrow-icon ${showPassengerDropdown ? 'up' : ''}`} />
+                </div>
+                
+                {showPassengerDropdown && (
+                  <div className="passenger-dropdown">
+                    <div className="passenger-option">
+                      <span>Adults</span>
+                      <div className="counter">
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setAdults(adults > 1 ? adults - 1 : 1);
+                          }}
+                        >-</button>
+                        <span>{adults}</span>
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setAdults(adults + 1);
+                          }}
+                        >+</button>
                       </div>
-                    ))}
+                    </div>
+                    <div className="passenger-option">
+                      <span>Children</span>
+                      <div className="counter">
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setChildren(children > 0 ? children - 1 : 0);
+                          }}
+                        >-</button>
+                        <span>{children}</span>
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setChildren(children + 1);
+                          }}
+                        >+</button>
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
-            )}
-          </div>
-        }
-      />
-      <Route path="/flight-search" element={<SearchResults />} />
-    </Routes>
-  );
-};
+            </div>
 
-const styles = {
-  container: {
-    fontFamily: 'Arial, sans-serif',
-    display: 'flex',
-    flexDirection: 'column',
-    height: '100vh',
-  },
-  headerContainer: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    padding: '20px',
-    backgroundColor: '#f0f0f0',
-  },
-  logo: {
-    width: '100px',
-  },
-  mainContainer: {
-    display: 'flex',
-    flex: 1,
-    padding: '20px',
-  },
-  searchContainer: {
-    flex: 0.3,
-    padding: '20px',
-    backgroundColor: '#f9f9f9',
-    marginRight: '20px',
-  },
-  mapContainer: {
-    flex: 0.7,
-    padding: '20px',
-    backgroundColor: '#f0f0f0',
-  },
-  title: {
-    textAlign: 'center',
-    fontSize: '24px',
-  },
-  subtitle: {
-    textAlign: 'center',
-    fontSize: '16px',
-    marginBottom: '20px',
-  },
-  input: {
-    display: 'block',
-    width: '100%',
-    padding: '10px',
-    margin: '10px 0',
-    borderRadius: '5px',
-  },
-  passengerCounter: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    margin: '10px 0',
-  },
-  searchButton: {
-    width: '100%',
-    padding: '15px',
-    backgroundColor: 'blue',
-    color: 'white',
-    borderRadius: '5px',
-    margin: '10px 0',
-  },
-  suggestionList: {
-    listStyleType: 'none',
-    padding: 0,
-    margin: 0,
-    backgroundColor: '#fff',
-    borderRadius: '5px',
-    maxHeight: '200px',
-    overflowY: 'auto',
-    border: '1px solid #ccc',
-  },
-  suggestionItem: {
-    padding: '8px',
-    cursor: 'pointer',
-  },
-  hotelsContainer: {
-    marginTop: '20px',
-    padding: '20px',
-    backgroundColor: '#f0f0f0',
-    borderRadius: '8px',
-  },
-  hotelCard: {
-    backgroundColor: '#fff',
-    padding: '20px',
-    borderRadius: '8px',
-    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-    marginBottom: '10px',
-  },
+            <div className="form-actions">
+              <button 
+                className="search-button"
+                onClick={searchFlights}
+              >
+                Search Flights
+              </button>
+              <button 
+                className="secondary-button"
+                onClick={searchHotels}
+              >
+                Find Hotels
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="map-results-container">
+        <div className="map-container">
+          <GoogleMapComponent
+            origin={originCoords}
+            destination={destinationCoords}
+          />
+        </div>
+        
+        {showHotels && (
+          <div className="hotel-results">
+            <h2 className="section-title">Hotels in {destinationName || destinationCode}</h2>
+            <div className="hotel-grid">
+              {hotels.length === 0 ? (
+                <div className="no-results">No hotels found.</div>
+              ) : (
+                hotels.map((hotel, index) => (
+                  <div key={index} className="hotel-card">
+                    <div className="hotel-image">
+                      <img src="https://via.placeholder.com/300x200" alt={hotel.hotel.name} />
+                    </div>
+                    <div className="hotel-details">
+                      <h3>{hotel.hotel.name}</h3>
+                      <p className="hotel-description">{hotel.hotel.description || 'Luxury accommodation with premium amenities'}</p>
+                      <div className="price-info">
+                        <span className="price">${hotel.offers[0].price.total}</span>
+                        <span className="per-night">per night</span>
+                      </div>
+                      <div className="date-info">
+                        <span>Check-in: {hotel.offers[0].checkInDate}</span>
+                        <span>Check-out: {hotel.offers[0].checkOutDate}</span>
+                      </div>
+                      <button className="view-button">View Deal</button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
+      <footer className="app-footer">
+        <div className="footer-content">
+          <div className="footer-section">
+            <h3>Company</h3>
+            <ul>
+              <li>About Us</li>
+              <li>Careers</li>
+              <li>Press</li>
+              <li>Blog</li>
+            </ul>
+          </div>
+          <div className="footer-section">
+            <h3>Support</h3>
+            <ul>
+              <li>Help Center</li>
+              <li>Safety Information</li>
+              <li>Cancellation Options</li>
+              <li>Report Issue</li>
+            </ul>
+          </div>
+          <div className="footer-section">
+            <h3>Contact</h3>
+            <ul>
+              <li>+40 753 641 499</li>
+              <li>support@packandgo.com</li>
+              <li>24/7 Customer Service</li>
+            </ul>
+          </div>
+          <div className="footer-section">
+            <h3>Subscribe</h3>
+            <p>Get the latest deals and offers</p>
+            <div className="newsletter-form">
+              <input type="email" placeholder="Your email address" />
+              <button>Subscribe</button>
+            </div>
+          </div>
+        </div>
+        <div className="footer-bottom">
+          <p>© 2025 PackAndGo. All rights reserved.</p>
+          <div className="legal-links">
+            <a href="#">Terms of Service</a>
+            <a href="#">Privacy Policy</a>
+            <a href="#">Cookie Policy</a>
+          </div>
+        </div>
+      </footer>
+
+      <Routes>
+        <Route path="/flight-search" element={<SearchResults />} />
+      </Routes>
+    </div>
+  );
 };
 
 export default App;
