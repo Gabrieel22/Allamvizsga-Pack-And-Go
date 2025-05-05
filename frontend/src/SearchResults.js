@@ -16,7 +16,7 @@ const SearchResults = () => {
   const [selectedFlight, setSelectedFlight] = useState(null);
   const [selectedHotel, setSelectedHotel] = useState(null);
   const [showBookingPopup, setShowBookingPopup] = useState(false);
-  const [showFlightDetailsPopup, setShowFlightDetailsPopup] = useState(false);
+  const [showDetailsPanel, setShowDetailsPanel] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -286,7 +286,11 @@ const SearchResults = () => {
 
   const handleShowFlightDetails = (flight) => {
     setSelectedFlight(flight);
-    setShowFlightDetailsPopup(true);
+    setShowDetailsPanel(true);
+  };
+
+  const closeDetailsPanel = () => {
+    setShowDetailsPanel(false);
   };
 
   const handleBackToSearch = () => {
@@ -359,10 +363,12 @@ const SearchResults = () => {
         <button onClick={handleBackToSearch} className="back-button">
           <FaArrowLeft /> Modify Search
         </button>
-        <h1>Flight Search Results</h1>
-        <div className="results-summary">
-          <span>{originCode} <IoIosArrowForward /> {destinationCode}</span>
-          <span>{formatDate(dateOfDeparture)} {dateOfReturn && `- ${formatDate(dateOfReturn)}`}</span>
+        <div className="header-title-container">
+          <h1>Flight Search Results</h1>
+          <div className="results-summary">
+            <span>{originCode} <IoIosArrowForward /> {destinationCode}</span>
+            <span>{formatDate(dateOfDeparture)} {dateOfReturn && `- ${formatDate(dateOfReturn)}`}</span>
+          </div>
         </div>
       </div>
 
@@ -611,164 +617,197 @@ const SearchResults = () => {
       )}
 
       {showBookingPopup && (
-        <div className="popup-overlay">
-          <div className="booking-popup">
-            <h2>Complete Your Booking</h2>
-            <form className="booking-form">
-              <div className="form-group">
-                <label>Full Name</label>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Enter your full name"
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label>Email Address</label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Enter your email"
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label>Phone Number</label>
-                <input
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="Enter your phone number"
-                  required
-                />
-              </div>
-              
-              {costOfLivingDifference && (
-                <div className="cost-comparison">
-                  <h3>Cost of Living Comparison</h3>
-                  <p>
-                    {destinationCity} is {Math.abs(costOfLivingDifference.percentageDifference).toFixed(2)}% 
-                    {costOfLivingDifference.percentageDifference > 0 ? ' more expensive' : ' cheaper'} than {originCity}
-                  </p>
-                  <p>
-                    If you need $1000 for a week in {originCity}, you'll need about 
-                    ${(1000 * (1 + costOfLivingDifference.percentageDifference / 100)).toFixed(2)} in {destinationCity}
-                  </p>
+        <div className="popup-overlay" onClick={() => setShowBookingPopup(false)}>
+          <div className="booking-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Complete Your Booking</h2>
+              <button
+                className="modal-close-button"
+                onClick={() => setShowBookingPopup(false)}
+                aria-label="Close booking modal"
+              >
+                ×
+              </button>
+            </div>
+            <div className="modal-content">
+              <div className="booking-form">
+                <div className="form-group">
+                  <label htmlFor="fullName">Full Name</label>
+                  <input
+                    id="fullName"
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Enter your full name"
+                    required
+                  />
                 </div>
-              )}
-              
-              <div className="form-actions">
-                <button 
-                  type="button" 
-                  onClick={handleBookingSubmit}
-                  className="submit-button"
-                >
-                  Confirm Booking
-                </button>
-                <button 
-                  type="button"
-                  onClick={() => setShowBookingPopup(false)}
-                  className="cancel-button"
-                >
-                  Cancel
-                </button>
+                <div className="form-group">
+                  <label htmlFor="email">Email Address</label>
+                  <input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Enter your email"
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="phone">Phone Number</label>
+                  <input
+                    id="phone"
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="Enter your phone number"
+                    required
+                  />
+                </div>
+                
+                {costOfLivingDifference && (
+                  <div className="cost-comparison">
+                    <h3>Cost of Living Comparison</h3>
+                    <p>
+                      {destinationCity} is {Math.abs(costOfLivingDifference.percentageDifference).toFixed(2)}% 
+                      {costOfLivingDifference.percentageDifference > 0 ? ' more expensive' : ' cheaper'} than {originCity}
+                    </p>
+                    <p>
+                      If you need $1000 for a week in {originCity}, you'll need about 
+                      ${(1000 * (1 + costOfLivingDifference.percentageDifference / 100)).toFixed(2)} in {destinationCity}
+                    </p>
+                  </div>
+                )}
+                
+                <div className="form-actions">
+                  <button 
+                    type="button" 
+                    onClick={handleBookingSubmit}
+                    className="submit-button"
+                  >
+                    Confirm Booking
+                  </button>
+                  <button 
+                    type="button"
+                    onClick={() => setShowBookingPopup(false)}
+                    className="cancel-button"
+                  >
+                    Cancel
+                  </button>
+                </div>
               </div>
-            </form>
+            </div>
           </div>
         </div>
       )}
 
-      {showFlightDetailsPopup && selectedFlight && (
-        <div className="popup-overlay">
-          <div className="flight-details-popup">
-            <h2>Flight Details</h2>
-            <button 
-              className="close-popup"
-              onClick={() => setShowFlightDetailsPopup(false)}
-            >
-              &times;
-            </button>
-            
-            <div className="flight-summary">
-              <div className="summary-item">
-                <span>Flight Number</span>
-                <span>{selectedFlight.itineraries[0].segments[0].carrierCode} {selectedFlight.itineraries[0].segments[0].number}</span>
-              </div>
-              <div className="summary-item">
-                <span>Departure</span>
-                <span>{formatDate(selectedFlight.itineraries[0].segments[0].departure.at)}</span>
-              </div>
-              <div className="summary-item">
-                <span>Arrival</span>
-                <span>{formatDate(selectedFlight.itineraries[0].segments[selectedFlight.itineraries[0].segments.length - 1].arrival.at)}</span>
-              </div>
-              <div className="summary-item">
-                <span>Duration</span>
-                <span>{formatDuration(selectedFlight.itineraries[0].duration)}</span>
-              </div>
-              <div className="summary-item">
-                <span>Aircraft</span>
-                <span>{selectedFlight.itineraries[0].segments[0].aircraft?.code || 'Unknown'}</span>
-              </div>
+      {showDetailsPanel && selectedFlight && (
+        <React.Fragment>
+          <div className="panel-overlay" onClick={closeDetailsPanel}></div>
+          <div className={`flight-details-panel ${showDetailsPanel ? 'open' : ''}`}>
+            <div className="panel-header">
+              <h3>Flight Details</h3>
+              <button
+                className="panel-close-button"
+                onClick={closeDetailsPanel}
+                aria-label="Close flight details"
+              >
+                ×
+              </button>
             </div>
-            
-            <h3>Itinerary</h3>
-            <div className="itinerary-details">
-              {selectedFlight.itineraries.map((itinerary, idx) => (
-                <div key={idx} className="itinerary-segment">
-                  <h4>{idx === 0 ? 'Outbound' : 'Return'} Flight</h4>
-                  {itinerary.segments.map((segment, segIdx) => (
-                    <div key={segIdx} className="segment-details">
-                      <div className="segment-header">
-                        <span className="segment-airports">
-                          {segment.departure.iataCode} <IoIosArrowForward /> {segment.arrival.iataCode}
-                        </span>
-                        <span className="segment-time">
-                          {formatDate(segment.departure.at)} - {formatDate(segment.arrival.at)}
-                        </span>
-                      </div>
-                      <div className="segment-info">
-                        <span>Flight: {segment.carrierCode} {segment.number}</span>
-                        <span>Duration: {segment.duration}</span>
-                        <span>Aircraft: {segment.aircraft?.code || 'Unknown'}</span>
-                      </div>
+            <div className="panel-content">
+              {/* Flight Summary Section */}
+              <section className="flight-summary-section">
+                <h4 className="section-title">Flight Overview</h4>
+                <div className="summary-grid">
+                  <div className="summary-item">
+                    <span className="summary-label">Flight Number</span>
+                    <span className="summary-value">{selectedFlight.itineraries[0].segments[0].carrierCode} {selectedFlight.itineraries[0].segments[0].number}</span>
+                  </div>
+                  <div className="summary-item">
+                    <span className="summary-label">Departure</span>
+                    <span className="summary-value">{formatDate(selectedFlight.itineraries[0].segments[0].departure.at)}</span>
+                  </div>
+                  <div className="summary-item">
+                    <span className="summary-label">Arrival</span>
+                    <span className="summary-value">{formatDate(selectedFlight.itineraries[0].segments[selectedFlight.itineraries[0].segments.length - 1].arrival.at)}</span>
+                  </div>
+                  <div className="summary-item">
+                    <span className="summary-label">Duration</span>
+                    <span className="summary-value">{formatDuration(selectedFlight.itineraries[0].duration)}</span>
+                  </div>
+                  <div className="summary-item">
+                    <span className="summary-label">Aircraft</span>
+                    <span className="summary-value">{selectedFlight.itineraries[0].segments[0].aircraft?.code || 'Unknown'}</span>
+                  </div>
+                </div>
+              </section>
+
+              {/* Itinerary Section */}
+              <section className="itinerary-section">
+                <h4 className="section-title">Itinerary</h4>
+                <div className="itinerary-details">
+                  {selectedFlight.itineraries.map((itinerary, idx) => (
+                    <div key={idx} className="itinerary-segment">
+                      <h5 className={`segment-title ${idx === 0 ? 'outbound' : 'return'}`}>
+                        {idx === 0 ? 'Outbound Flight' : 'Return Flight'}
+                      </h5>
+                      {itinerary.segments.map((segment, segIdx) => (
+                        <div key={segIdx} className="segment-card">
+                          <div className="segment-route">
+                            <span className="airport-code">{segment.departure.iataCode}</span>
+                            <IoIosArrowForward className="route-arrow" />
+                            <span className="airport-code">{segment.arrival.iataCode}</span>
+                          </div>
+                          <div className="segment-time">
+                            <span>{formatDate(segment.departure.at)}</span>
+                            <span> - </span>
+                            <span>{formatDate(segment.arrival.at)}</span>
+                          </div>
+                          <div className="segment-details">
+                            <div className="detail-item">
+                              <span className="detail-label">Flight:</span>
+                              <span className="detail-value">{segment.carrierCode} {segment.number}</span>
+                            </div>
+                            <div className="detail-item">
+                              <span className="detail-label">Duration:</span>
+                              <span className="detail-value">{formatDuration(segment.duration)}</span>
+                            </div>
+                            <div className="detail-item">
+                              <span className="detail-label">Aircraft:</span>
+                              <span className="detail-value">{segment.aircraft?.code || 'Unknown'}</span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   ))}
                 </div>
-              ))}
-            </div>
-            
-            <h3>Price Breakdown</h3>
-            <div className="price-details">
-              <div className="price-item">
-                <span>Base Fare</span>
-                <span>{selectedFlight.price.base} {selectedFlight.price.currency}</span>
-              </div>
-              {selectedFlight.price.fees?.map((fee, idx) => (
-                <div key={idx} className="price-item">
-                  <span>{fee.type} Fee</span>
-                  <span>{fee.amount} {selectedFlight.price.currency}</span>
+              </section>
+
+              {/* Price Breakdown Section */}
+              <section className="price-breakdown-section">
+                <h4 className="section-title">Price Breakdown</h4>
+                <div className="price-table">
+                  <div className="price-row">
+                    <span className="price-label">Base Fare</span>
+                    <span className="price-value">{selectedFlight.price.base} {selectedFlight.price.currency}</span>
+                  </div>
+                  {selectedFlight.price.fees?.map((fee, idx) => (
+                    <div key={idx} className="price-row">
+                      <span className="price-label">{fee.type} Fee</span>
+                      <span className="price-value">{fee.amount} {selectedFlight.price.currency}</span>
+                    </div>
+                  ))}
+                  <div className="price-row total">
+                    <span className="price-label">Total Price</span>
+                    <span className="price-value total">{selectedFlight.price.total} {selectedFlight.price.currency}</span>
+                  </div>
                 </div>
-              ))}
-              <div className="price-item total">
-                <span>Total Price</span>
-                <span>{selectedFlight.price.total} {selectedFlight.price.currency}</span>
-              </div>
-            </div>
-            
-            <div className="popup-actions">
-              <button 
-                onClick={() => setShowFlightDetailsPopup(false)}
-                className="close-button"
-              >
-                Close
-              </button>
+              </section>
             </div>
           </div>
-        </div>
+        </React.Fragment>
       )}
     </div>
   );
