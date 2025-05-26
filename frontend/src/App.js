@@ -6,6 +6,7 @@ import GoogleMapComponent from './GoogleMapComponent';
 import { FaUser, FaPlane, FaHotel, FaCalendarAlt, FaUserFriends, FaExchangeAlt } from 'react-icons/fa';
 import { IoIosArrowDown } from 'react-icons/io';
 import './App.css';
+import logo from './assets/images/logo.png'
 
 const App = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -26,7 +27,7 @@ const App = () => {
   const [destinationCoords, setDestinationCoords] = useState(null);
   const [activeTab, setActiveTab] = useState('flights');
   const [showPassengerDropdown, setShowPassengerDropdown] = useState(false);
-  const apiKey = process.env.REACT_APP_NINJA_API_KEY;
+  const apiKey = process.env.REACT_APP_RAPIDAPI_KEY;
 
   const navigate = useNavigate();
 
@@ -35,17 +36,31 @@ const App = () => {
     setIsLoggedIn(storedLoginStatus === 'true');
   }, []);
 
-  const fetchCoordinates = async (iataCode, setCoords) => {
-    if (!iataCode) return;
-    const apiUrl = `https://api.api-ninjas.com/v1/airports?iata=${iataCode}`;
+const fetchCoordinates = async (iataCode, setCoords) => {
+    if (!iataCode) {
+      setCoords(null);
+      return;
+    }
+    const apiUrl = `https://aerodatabox.p.rapidapi.com/airports/search/term?q=${iataCode}`;
 
     try {
       const response = await axios.get(apiUrl, {
-        headers: { 'X-Api-Key': apiKey },
+        headers: {
+          'X-RapidAPI-Key': apiKey,
+          'X-RapidAPI-Host': 'aerodatabox.p.rapidapi.com'
+        },
       });
-      if (response.status === 200 && response.data.length > 0) {
-        const { latitude, longitude } = response.data[0];
-        setCoords({ lat: parseFloat(latitude), lng: parseFloat(longitude) });
+      if (response.status === 200 && response.data.items && response.data.items.length > 0) {
+        const latitude = response.data.items[0].location.lat;
+        const longitude = response.data.items[0].location.lon;
+        const lat = parseFloat(latitude);
+        const lng = parseFloat(longitude);
+        if (!isNaN(lat) && !isNaN(lng) && isFinite(lat) && isFinite(lng)) {
+          setCoords({ lat, lng });
+        } else {
+          console.error('Invalid coordinates received:', { latitude, longitude });
+          setCoords(null);
+        }
       } else {
         console.error('No coordinates found for IATA:', iataCode);
         setCoords(null);
@@ -55,7 +70,6 @@ const App = () => {
       setCoords(null);
     }
   };
-
   useEffect(() => {
     fetchCoordinates(originCode, setOriginCoords);
   }, [originCode]);
@@ -65,15 +79,21 @@ const App = () => {
   }, [destinationCode]);
 
   const fetchSuggestions = async (query, setSuggestions) => {
-    if (!query.trim()) return;
-    const apiUrl = `https://api.api-ninjas.com/v1/airports?name=${query}`;
+    if (!query.trim() || query.trim().length < 3) {
+      setSuggestions([]);
+      return;
+    }
+    const apiUrl = `https://aerodatabox.p.rapidapi.com/airports/search/term?q=${query}`;
 
     try {
       const response = await axios.get(apiUrl, {
-        headers: { 'X-Api-Key': apiKey },
+        headers: {
+          'X-RapidAPI-Key': apiKey,
+          'X-RapidAPI-Host': 'aerodatabox.p.rapidapi.com'
+        },
       });
-      if (response.status === 200) {
-        const data = response.data;
+      if (response.status === 200 && response.data.items) {
+        const data = response.data.items;
         if (data.length === 0) {
           alert('No suggestions found for this query.');
         } else {
@@ -91,7 +111,6 @@ const App = () => {
       alert('Failed to fetch suggestions. Please try again later.');
     }
   };
-
   const handleSuggestionClick = (suggestion, setInputName, setInputCode) => {
     setInputName(suggestion.name);
     setInputCode(suggestion.iataCode);
@@ -142,7 +161,7 @@ const App = () => {
     <div className="app-container">
       <header className="app-header">
         <div className="logo-container">
-          <img src="./assets/images/logo.png" alt="PackAndGo Logo" className="logo" />
+          <img src={logo} alt="PackAndGo Logo" className="logo" width="200px"/>
           <h1 className="brand-name">PackAndGo</h1>
         </div>
         <nav className="nav-links">
@@ -298,8 +317,8 @@ const App = () => {
                 {showPassengerDropdown && (
                   <div className="passenger-dropdown">
                     <div className="passenger-option">
-                      <span>Adults</span>
-                      <div className="counter">
+                      <span style={{color: 'black'}}>Adults</span>
+                      <div className="counter" style={{color: 'black'}}>
                         <button 
                           onClick={(e) => {
                             e.stopPropagation();
@@ -316,8 +335,8 @@ const App = () => {
                       </div>
                     </div>
                     <div className="passenger-option">
-                      <span>Children</span>
-                      <div className="counter">
+                      <span style={{color: 'black'}}>Children</span>
+                      <div className="counter" style={{color: 'black'}}>
                         <button 
                           onClick={(e) => {
                             e.stopPropagation();
