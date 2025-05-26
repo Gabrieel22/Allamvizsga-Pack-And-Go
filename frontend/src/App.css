@@ -208,6 +208,17 @@ body {
   color: var(--text-color);
 }
 
+.input-group input,
+.passenger-selector {
+  width: 100%;
+  padding: 10px 10px 10px 40px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  background-color: #fff;
+  color: #333; /* Input szövege sötét */
+}
+
 .input-with-icon {
   position: relative;
 }
@@ -237,25 +248,31 @@ body {
 
 .suggestion-dropdown {
   position: absolute;
-  width: 100%;
-  max-height: 300px;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background-color: #fff; /* Világos háttér */
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  max-height: 200px;
   overflow-y: auto;
-  background-color: white;
-  border: 1px solid var(--border-color);
-  border-radius: 0.5rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  z-index: 10;
+  z-index: 1000;
+  margin: 0;
+  padding: 0;
   list-style: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .suggestion-dropdown li {
-  padding: 0.75rem 1rem;
+  padding: 10px;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  color: #333;
+  font-size: 14px;
 }
 
 .suggestion-dropdown li:hover {
-  background-color: var(--background-color);
+  background-color: #f0f0f0;
+  color: #333;
 }
 
 .swap-button {
@@ -281,32 +298,32 @@ body {
 .passenger-selector {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1rem;
-  border: 1px solid var(--border-color);
-  border-radius: 0.5rem;
+  gap: 10px;
   cursor: pointer;
-  position: relative;
+  padding: 10px;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 4px;
 }
 
 .passenger-dropdown {
   position: absolute;
   top: 100%;
   left: 0;
-  width: 100%;
-  background-color: white;
-  border: 1px solid var(--border-color);
-  border-radius: 0.5rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  padding: 1rem;
-  z-index: 10;
+  right: 0;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 10px;
+  z-index: 1000;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .passenger-option {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
+  padding: 5px 0;
 }
 
 .passenger-option:last-child {

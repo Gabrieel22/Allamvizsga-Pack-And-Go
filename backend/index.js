@@ -46,96 +46,50 @@ const amadeus = new Amadeus({
 const NINJA_API_KEY = process.env.NINJA_API_KEY;
 if (!NINJA_API_KEY) {
   console.error("Missing NINJA_API_KEY in environment variables");
-  process.exit(1);
 }
 
-// Városkód lekérése IATA kód alapján
 app.get('/get-city-code/:iataCode', async (req, res) => {
   const { iataCode } = req.params;
-  
-  if (!iataCode) {
-    return res.status(400).json({ error: 'IATA code is required' });
-  }
 
   try {
-    // Amadeus API hívás a repülőtér adatainak lekéréséhez
-    const response = await amadeus.referenceData.locations.get({
-      keyword: iataCode,
-      subType: "AIRPORT",
-      view: "FULL" // Biztosítjuk, hogy minden szükséges adatot kapjunk
-    });
-
-    // Ellenőrizzük a választ és kinyerjük a cityCode-ot
-    if (response.result && response.result.data && response.result.data.length > 0) {
-      const airportData = response.result.data[0];
-      
-      if (airportData.address && airportData.address.cityCode) {
-        const cityCode = airportData.address.cityCode;
-        return res.status(200).json({ cityCode });
+    let cityCode;
+    try {
+      const response = await amadeus.referenceData.locations.get({
+        subType: 'AIRPORT',
+        keyword: iataCode,
+      });
+      const data = JSON.parse(response.body).data;
+      if (data && data.length > 0) {
+        cityCode = data[0].address.cityCode;
+        if (iataCode == 'BUD' && cityCode== 'DBN') cityCode = 'BUD'
+        return res.json({ cityCode });
+      } else {
+        console.warn(`No city code found for IATA ${iataCode} using Amadeus API. Falling back to AeroDataBox API.`);
       }
-      
-      // Ha nincs cityCode, de van cityName, megpróbálhatjuk kezelni
-      if (airportData.address && airportData.address.cityName) {
-        console.warn(`No cityCode found for ${iataCode}, trying to get city code from cityName`);
-        
-        // Alternatív megoldás: városnév alapján keresünk cityCode-ot
-        const cityResponse = await amadeus.referenceData.locations.get({
-          keyword: airportData.address.cityName,
-          subType: "CITY"
-        });
-        
-        if (cityResponse.result.data && cityResponse.result.data.length > 0) {
-          const cityCode = cityResponse.result.data[0].iataCode;
-          return res.status(200).json({ cityCode });
-        }
-      }
-      
-      return res.status(404).json({ error: 'City code not found in airport data' });
-    } else {
-      return res.status(404).json({ error: 'Airport not found' });
+    } catch (amadeusError) {
+      console.error('Error with Amadeus API:', amadeusError.message);
     }
-  } catch (error) {
-    console.error('Error fetching city code:', error);
-    
-    // Részletesebb hibaüzenet
-    const errorDetails = {
-      message: error.message,
-      code: error.code,
-      statusCode: error.response?.statusCode,
-      apiError: error.response?.result?.errors
-    };
-    
-    return res.status(500).json({ 
-      error: 'Failed to fetch city code',
-      details: errorDetails
-    });
-  }
-});
 
-app.get('/city-and-airport-search/:parameter', async (req, res) => {
-  const parameter = req.params.parameter;
-  const apiUrl = `https://api.api-ninjas.com/v1/airports?name=${parameter}`;
-
-  try {
-    const response = await axios.get(apiUrl, {
+    //Fallback az AeroDataBox API-ra, ha az Amadeus nem adott eredményt
+    const aeroDataBoxUrl = `https://aerodatabox.p.rapidapi.com/airports/search/term?q=${iataCode}`;
+    const aeroDataBoxResponse = await axios.get(aeroDataBoxUrl, {
       headers: {
-        'X-Api-Key': NINJA_API_KEY,
+        'X-RapidAPI-Key': process.env.RAPIDAPI_KEY,
+        'X-RapidAPI-Host': 'aerodatabox.p.rapidapi.com',
       },
     });
 
-    if (response.status === 200) {
-      res.status(200).json(response.data);
+    if (aeroDataBoxResponse.status === 200 && aeroDataBoxResponse.data.items && aeroDataBoxResponse.data.items.length > 0) {
+      cityCode = aeroDataBoxResponse.data.items[0].iata;
+      return res.json({ cityCode });
     } else {
-      res.status(response.status).json({
-        error: `Error fetching data: ${response.statusText}`,
-      });
+      return res.status(404).json({ error: `No city code found for IATA ${iataCode}` });
     }
   } catch (error) {
-    console.error('Error fetching airport data:', error.message);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error('Error in /get-city-code:', error.message);
+    return res.status(500).json({ error: 'Failed to fetch city code', errorDetails: error.message });
   }
 });
-
 const validateDepartureDate = (date) => {
   const today = new Date();
   const requestedDate = new Date(date);
