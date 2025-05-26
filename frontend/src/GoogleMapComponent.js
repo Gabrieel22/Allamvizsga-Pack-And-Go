@@ -1,10 +1,6 @@
 import React from 'react';
 import { GoogleMap, useLoadScript, Marker, Polyline } from '@react-google-maps/api';
-
-const mapContainerStyle = {
-  width: '100%',
-  height: 'calc(100vh - 100px)', // Térkép majdnem az egész képernyőt kitölti
-};
+import './GoogleMapComponent.css';
 
 const GoogleMapComponent = ({ origin, destination }) => {
   const { isLoaded, loadError } = useLoadScript({
@@ -27,24 +23,49 @@ const GoogleMapComponent = ({ origin, destination }) => {
   if (origin) path.push(origin);
   if (destination) path.push(destination);
 
-  if (loadError) return <div>Error loading maps</div>;
-  if (!isLoaded) return <div>Loading Maps...</div>;
+  if (loadError) return <div className="map-error">Error loading maps</div>;
+  if (!isLoaded) return <div className="map-loading">Loading Maps...</div>;
 
   return (
     <GoogleMap
-      mapContainerStyle={mapContainerStyle}
-      zoom={origin && destination ? 3 : 3}
+      mapContainerClassName="map-container"
+      zoom={origin && destination ? 4 : 3}
       center={center}
+      options={{
+        styles: [
+          {
+            featureType: "poi",
+            elementType: "labels",
+            stylers: [{ visibility: "off" }]
+          }
+        ]
+      }}
     >
-      {origin && <Marker position={origin} title="Origin" />}
-      {destination && <Marker position={destination} title="Destination" />}
+      {origin && (
+        <Marker 
+          position={origin} 
+          title="Origin"
+          icon={{
+            url: "https://maps.google.com/mapfiles/ms/icons/red-dot.png"
+          }}
+        />
+      )}
+      {destination && (
+        <Marker 
+          position={destination} 
+          title="Destination"
+          icon={{
+            url: "https://maps.google.com/mapfiles/ms/icons/green-dot.png"
+          }}
+        />
+      )}
       {origin && destination && (
         <Polyline
           path={path}
           options={{
-            strokeColor: '#FF0000',
-            strokeOpacity: 1.0,
-            strokeWeight: 2,
+            strokeColor: '#3b82f6',
+            strokeOpacity: 0.8,
+            strokeWeight: 3,
           }}
         />
       )}
