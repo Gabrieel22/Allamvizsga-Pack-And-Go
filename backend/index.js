@@ -17,6 +17,7 @@ const db = mysql.createPool({
   database: "PackAndGO",
 });
 
+const router = express.Router();
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
@@ -235,30 +236,66 @@ app.post('/login', async (req, res) => {
   }
 });
 
+async function getTravelDocuments(departureCountry, arrivingCountry) {
+  const prompt = `${departureCountry}-ból utazok ${arrivingCountry}-ba. Milyen iratokra lenne szükségem? Egészségügyi biztosítás, vízum, bármely egyéb dokumentum stb. Keress utánna és MINDEN szükséges dokumentumot irj le. Rövid, lényegretörő válasz magyar nyelven. Magyarázatot nem szükséges irnod. A válasz után ird le a linket, hogy honnan vannak az adatok illetve, hogy mikor voltak frissitve.Ha nem tudsz egy konkrét linket megadni, akkor csak annyit irj, hogy mikor voltak frissitve az adatok. (év, stb)`;
+
+  try {
+    const response = await axios.post(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GOOGLE_GEMINI_API_KEY}`,
+      {
+        contents: [
+          {
+            parts: [
+              { text: prompt }
+            ]
+          }
+        ],
+        generationConfig: {
+          maxOutputTokens: 300,
+          temperature: 0.7,
+        }
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      }
+    );
+    return response.data.candidates[0].content.parts[0].text.trim();
+  } catch (error) {
+    console.error('Gemini API hívás hiba:', error.response?.data || error.message);
+    return 'Nem sikerült a dokumentumok lekérdezése. Kérjük, ellenőrizze az indulási és érkezési ország követelményeit hivatalos forrásból.';
+  }
+}
+
+const getCountryNameByIataCode = async (iataCode) => {
+  try {
+    const response = await axios.get('http://localhost:3000/get-city-name', {
+      params: { iataCode },
+    });
+
+    if (response.data && response.data.countryName) {
+      return response.data.countryName;
+    } else {
+      throw new Error(`City not found for IATA code: ${iataCode}`);
+    }
+  } catch (error) {
+    console.error('Error fetching city name:', error);
+    throw error;
+  }
+};
+
 app.post('/book', async (req, res) => {
   try {
     const { flight, hotel, name, email, phone, costOfLivingDifference, originCity, destinationCity } = req.body;
 
-    const getCountryNameByIataCode = async (iataCode) => {
-      try {
-        const response = await axios.get('http://localhost:3000/get-city-name', {
-          params: { iataCode },
-        });
-    
-        if (response.data && response.data.countryName) {
-          return response.data.countryName;
-        } else {
-          throw new Error(`City not found for IATA code: ${iataCode}`);
-        }
-      } catch (error) {
-        console.error('Error fetching city name:', error);
-        throw error;
-      }
-    };
+    const departureCountry = await getCountryNameByIataCode(flight.itineraries[0].segments[0].departure.iataCode);
+    const arrivingCountry = await getCountryNameByIataCode(flight.itineraries[0].segments[flight.itineraries[0].segments.length - 1].arrival.iataCode);
+    console.log(departureCountry," asd ", arrivingCountry)
+    const travelDocuments = await getTravelDocuments(departureCountry, arrivingCountry);
+    console.log(travelDocuments);
 
-    const country = await getCountryNameByIataCode(flight.itineraries[0].segments[flight.itineraries[0].segments.length - 1].arrival.iataCode);
-
-    const apiUrl = `https://api.api-ninjas.com/v1/country?name=${country}`;
+    const apiUrl = `https://api.api-ninjas.com/v1/country?name=${arrivingCountry}`;
 
     const apiResponse = await axios.get(apiUrl, {
       headers: {
@@ -299,6 +336,9 @@ app.post('/book', async (req, res) => {
         - ${costOfLivingDifference.percentageDifference.toFixed(2)}% ${costOfLivingDifference.percentageDifference > 0 ? 'drágább' : 'olcsóbb'} a célállomás, mint az indulási hely.
         - Ha ${originCity}-ben 1000$ kell egy hétre, akkor ${destinationCity}-ben körülbelül ${(1000 * (1 + costOfLivingDifference.percentageDifference / 100)).toFixed(2)}$ szükséges.
         - Pénznem a célországban: ${currency}
+
+        Szükséges utazási dokumentumok: ${travelDocuments}
+        Köszönjük, hogy a PackAndGo-t választotta!
       `,
     };
 
