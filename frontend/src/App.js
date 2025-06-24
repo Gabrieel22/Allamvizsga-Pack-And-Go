@@ -164,11 +164,8 @@ const fetchCoordinates = async (iataCode, setCoords) => {
           <img src={logo} alt="PackAndGo Logo" className="logo" width="200px"/>
           <h1 className="brand-name">PackAndGo</h1>
         </div>
-        <nav className="nav-links">
+        <nav className="nav-links" style={{paddingRight:"150px"}}>
           <Link to="/" className="nav-link active">Home</Link>
-          <Link to="/flights" className="nav-link">Flights</Link>
-          <Link to="/hotels" className="nav-link">Hotels</Link>
-          <Link to="/deals" className="nav-link">Deals</Link>
         </nav>
         <div className="user-actions">
           {isLoggedIn ? (
@@ -178,8 +175,8 @@ const fetchCoordinates = async (iataCode, setCoords) => {
             </div>
           ) : (
             <>
-              <button className="login-btn">Sign In</button>
-              <button className="signup-btn">Sign Up</button>
+              <button></button>
+              <button></button>
             </>
           )}
         </div>
@@ -192,12 +189,6 @@ const fetchCoordinates = async (iataCode, setCoords) => {
             onClick={() => setActiveTab('flights')}
           >
             <FaPlane /> Flights
-          </button>
-          <button 
-            className={`tab ${activeTab === 'hotels' ? 'active' : ''}`}
-            onClick={() => setActiveTab('hotels')}
-          >
-            <FaHotel /> Hotels
           </button>
         </div>
 
@@ -417,49 +408,8 @@ const fetchCoordinates = async (iataCode, setCoords) => {
       </div>
 
       <footer className="app-footer">
-        <div className="footer-content">
-          <div className="footer-section">
-            <h3>Company</h3>
-            <ul>
-              <li>About Us</li>
-              <li>Careers</li>
-              <li>Press</li>
-              <li>Blog</li>
-            </ul>
-          </div>
-          <div className="footer-section">
-            <h3>Support</h3>
-            <ul>
-              <li>Help Center</li>
-              <li>Safety Information</li>
-              <li>Cancellation Options</li>
-              <li>Report Issue</li>
-            </ul>
-          </div>
-          <div className="footer-section">
-            <h3>Contact</h3>
-            <ul>
-              <li>+40 753 641 499</li>
-              <li>support@packandgo.com</li>
-              <li>24/7 Customer Service</li>
-            </ul>
-          </div>
-          <div className="footer-section">
-            <h3>Subscribe</h3>
-            <p>Get the latest deals and offers</p>
-            <div className="newsletter-form">
-              <input type="email" placeholder="Your email address" />
-              <button>Subscribe</button>
-            </div>
-          </div>
-        </div>
         <div className="footer-bottom">
           <p>© 2025 PackAndGo. All rights reserved.</p>
-          <div className="legal-links">
-            <a href="#">Terms of Service</a>
-            <a href="#">Privacy Policy</a>
-            <a href="#">Cookie Policy</a>
-          </div>
         </div>
       </footer>
 
